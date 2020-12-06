@@ -5,8 +5,6 @@ from rl.policy import Policy
 
 class ZetaPolicy(Policy):
     """Implement the Zeta Q Policy
-
-    This Zeta Q Policy is a combination of Epsilon Greedy Policy and Boltzmann Q Policy with a parameter zeta
     """
 
     def __init__(self, zeta_start=1.0, zeta_end=.1, zeta_nb_steps=1000000, eps=.1, tau=1., clip=(-500., 500.)):

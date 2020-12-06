@@ -4,19 +4,15 @@ host = socket.gethostname()
 
 # environment specific constants
 
-DATA_ROOT = '/iemocap'
-PKL_ROOT = '/iemocap/pkl/'
+PKL_ROOT = './pkl/'
 
 if host == 'asimov':
-    DATA_ROOT = '/data/aq/shared/iemocap/IEMOCAP_full_release'
     PKL_ROOT = '/home/u1116888/projects/iemocap_dataset/'
 
 if host == 'Thejans-MacBook-Pro.local':
-    DATA_ROOT = '/Volumes/Kingston/datasets/audio/iemocap'
     PKL_ROOT = '/Users/jayaneetha/PycharmProjects/iemocap_dataset/pkl/'
 
 if host == 'thejanr-u20dt':
-    DATA_ROOT = '/home/jayaneetha/iotheath/data/iemocap'
     PKL_ROOT = '/home/jayaneetha/iotheath/iemocap_dataset/'
 
 EMOTIONS = ['hap', 'sad', 'ang', 'neu']
