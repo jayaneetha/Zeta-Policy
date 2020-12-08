@@ -48,7 +48,7 @@ sentry-sdk==0.19.4
 shortuuid==1.0.1
 six==1.15.0
 smmap==3.0.4
-SoundFile==0.10.3.post1
+SoundFile==0.10.2
 subprocess32==3.5.4
 tensorboard==1.14.0
 tensorflow==1.14.0
