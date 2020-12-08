@@ -8,5 +8,5 @@ This project requires `python 3.6`
 `git clone https://github.com/jayaneetha/Zeta-Policy.git`
 2. Install Requirements
 `pip install -r requirements.txt`
-3. Run `rl-run.py` with arguments
-`python rl-run.py --policy=ZetaPolicy`
+3. Run `rl_run.py` with arguments
+`python rl_run.py --policy=ZetaPolicy`
