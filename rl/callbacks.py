@@ -424,6 +424,7 @@ class WandbLogger(Callback):
         self.rewards = {}
         self.actions = {}
         self.metrics = {}
+        self.correct_inference = {}
         self.step = 0
 
     def on_train_begin(self, logs):
@@ -444,6 +445,7 @@ class WandbLogger(Callback):
         self.rewards[episode] = []
         self.actions[episode] = []
         self.metrics[episode] = []
+        self.correct_inference[episode] = []
 
     def on_episode_end(self, episode, logs):
         """ Compute and log training statistics of the episode when done """
@@ -477,6 +479,7 @@ class WandbLogger(Callback):
             'obs_mean': np.mean(self.observations[episode]),
             'obs_min': np.min(self.observations[episode]),
             'obs_max': np.max(self.observations[episode]),
+            'correct_inference': np.sum(self.correct_inference[episode]),
             **metrics_dict
         }
 
@@ -488,6 +491,7 @@ class WandbLogger(Callback):
         del self.rewards[episode]
         del self.actions[episode]
         del self.metrics[episode]
+        del self.correct_inference[episode]
 
     def on_step_end(self, step, logs):
         """ Update statistics of episode after each step """
@@ -496,5 +500,10 @@ class WandbLogger(Callback):
         self.rewards[episode].append(logs['reward'])
         self.actions[episode].append(logs['action'])
         self.metrics[episode].append(logs['metrics'])
+
+        try:
+            self.correct_inference[episode].append(int(logs['info']['correct_inference']))
+        except KeyError:
+            pass
 
         self.step += 1
