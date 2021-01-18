@@ -39,7 +39,8 @@ class AbstractEnv(gym.Env):
 
         info = {
             "ground_truth": np.argmax(self.Y[self.itr]),
-            "itr": self.itr
+            "itr": self.itr,
+            "correct_inference": int(action == np.argmax(self.Y[self.itr]))
         }
         self.itr += 1
 
