@@ -2,6 +2,7 @@ import gym
 import numpy as np
 
 from constants import EMOTIONS, NUM_MFCC, NO_features
+from datastore_esd import ESDDatastore
 from datastore_iemocap import IemocapDatastore
 from datastore_improv import ImprovDatastore
 from datastore_savee import SaveeDatastore
@@ -84,3 +85,10 @@ class SaveeEnv(AbstractEnv):
 
     def __init__(self, data_version) -> None:
         super().__init__(data_version=data_version, datastore=SaveeDatastore(FeatureType.MFCC))
+
+
+class ESDEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version) -> None:
+        super().__init__(data_version=data_version, datastore=ESDDatastore(FeatureType.MFCC))

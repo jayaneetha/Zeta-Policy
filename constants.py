@@ -12,8 +12,6 @@ if host == 'asimov':
 if host == 'Thejans-MacBook-Pro.local':
     PKL_ROOT = '/Users/jayaneetha/PycharmProjects/iemocap_dataset/pkl/'
 
-if host == 'thejanr-u20dt':
-    PKL_ROOT = '/home/jayaneetha/iotheath/iemocap_dataset/'
 
 EMOTIONS = ['hap', 'sad', 'ang', 'neu']
 GENDERS = ['M', 'F']

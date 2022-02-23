@@ -1,7 +1,7 @@
 import argparse
-import os
 
 import gym
+import os
 import tensorflow as tf
 from keras import Input
 from keras.optimizers import Adam
@@ -10,7 +10,7 @@ import models
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH
 from data_versions import DataVersions
 from datastore import Datastore
-from environments import IemocapEnv, SaveeEnv, ImprovEnv
+from environments import IemocapEnv, SaveeEnv, ImprovEnv, ESDEnv
 from rl.agents import DQNAgent
 from rl.callbacks import ModelIntervalCheckpoint, FileLogger, WandbLogger
 from rl.memory import SequentialMemory
@@ -61,6 +61,8 @@ def str2dataset(v) -> DataVersions:
         return DataVersions.SAVEE
     if ds == 'improv':
         return DataVersions.IMPROV
+    if ds == 'esd':
+        return DataVersions.ESD
 
 
 def run():
@@ -69,16 +71,18 @@ def run():
     parser.add_argument('--env-name', type=str, default='iemocap-rl-v3.1')
     parser.add_argument('--weights', type=str, default=None)
     parser.add_argument('--policy', type=str, default='EpsGreedyQPolicy')
-    parser.add_argument('--data-version', choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV],
+    parser.add_argument('--data-version',
+                        choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD],
                         type=str2dataset, default=DataVersions.IEMOCAP)
     parser.add_argument('--disable-wandb', type=str2bool, default=False)
-    parser.add_argument('--zeta-nb-steps', type=int, default=1000000)
+    parser.add_argument('--zeta-nb-steps', type=int, default=100000)
     parser.add_argument('--nb-steps', type=int, default=500000)
     parser.add_argument('--max-train-steps', type=int, default=440000)
     parser.add_argument('--eps', type=float, default=0.1)
     parser.add_argument('--pre-train', type=str2bool, default=False)
     parser.add_argument('--pre-train-dataset',
-                        choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE], type=str2dataset,
+                        choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD],
+                        type=str2dataset,
                         default=DataVersions.IEMOCAP)
     parser.add_argument('--warmup-steps', type=int, default=50000)
     parser.add_argument('--pretrain-epochs', type=int, default=64)
@@ -106,6 +110,9 @@ def run():
     if data_version == DataVersions.IMPROV:
         env = ImprovEnv(data_version)
 
+    if data_version == DataVersions.ESD:
+        env = ESDEnv(data_version)
+
     for k in args.__dict__.keys():
         print("\t{} :\t{}".format(k, args.__dict__[k]))
         env.__setattr__("_" + k, args.__dict__[k])
@@ -128,24 +135,28 @@ def run():
     dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                    nb_steps_warmup=args.warmup_steps, gamma=.99, target_model_update=10000,
                    train_interval=4, delta_clip=1., train_max_steps=args.max_train_steps)
-    dqn.compile(Adam(lr=.00025), metrics=['mae'])
+    dqn.compile(Adam(lr=.00025), metrics=['mae', 'accuracy'])
 
     if args.pre_train:
         from feature_type import FeatureType
 
         datastore: Datastore = None
 
-        if args.pre_train_dataset == DataVersions.IMPROV:
+        if args.pre_train_dataset == DataVersions.IEMOCAP:
             from datastore_iemocap import IemocapDatastore
             datastore = IemocapDatastore(FeatureType.MFCC)
 
-        if args.pre_train_dataset == DataVersions.Vimprov:
+        if args.pre_train_dataset == DataVersions.IMPROV:
             from datastore_improv import ImprovDatastore
             datastore = ImprovDatastore(22)
 
-        if args.pre_train_dataset == DataVersions.Vsavee:
+        if args.pre_train_dataset == DataVersions.SAVEE:
             from datastore_savee import SaveeDatastore
             datastore = SaveeDatastore(FeatureType.MFCC)
+
+        if args.pre_train_dataset == DataVersions.ESD:
+            from datastore_esd import ESDDatastore
+            datastore = ESDDatastore(FeatureType.MFCC)
 
         assert datastore is not None
 
@@ -157,7 +168,7 @@ def run():
     if args.mode == 'train':
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
         # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
-        weights_filename = 'rl-files/models/dqn_{}_weights.h5f'.format(args.env_name)
+        weights_filename = f'rl-files/models/dqn_{args.env_name}_weights.h5f'
         checkpoint_weights_filename = 'rl-files/models/dqn_' + args.env_name + '_weights_{step}.h5f'
         log_filename = 'rl-files/logs/dqn_{}_log.json'.format(args.env_name)
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
@@ -176,7 +187,7 @@ def run():
         dqn.test(env, nb_episodes=10, visualize=False)
 
     elif args.mode == 'test':
-        weights_filename = 'rl-files/models/dqn_{}_weights.h5f'.format(args.env_name)
+        weights_filename = f'rl-files/models/dqn_{args.env_name}_weights.h5f'
         if args.weights:
             weights_filename = args.weights
         dqn.load_weights(weights_filename)
