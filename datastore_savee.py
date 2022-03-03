@@ -16,10 +16,12 @@ class SaveeDatastore(Datastore):
 
         self.data_pkl = get_dataset("savee_sr_22k_2sec_4-classes.pkl")
 
-        rl_data, pre_train_data = randomize_split(self.data_pkl, split_ratio=0.7)
+        _data, pre_train_data = randomize_split(self.data_pkl, split_ratio=0.7)
+        rl_data, eval_data = randomize_split(_data, split_ratio=0.8)
 
         self.data = rl_data
         self.pre_train_data = pre_train_data
+        self.eval_data = eval_data
 
     def get_data(self):
         np.random.shuffle(self.data)
@@ -31,5 +33,11 @@ class SaveeDatastore(Datastore):
     def get_pre_train_data(self):
         x_train_mfcc = np.array([d[FeatureType.MFCC.name] for d in self.pre_train_data])
         y_train_emo = np.array([d['y_emo'] for d in self.pre_train_data])
+
+        return x_train_mfcc, y_train_emo, None
+
+    def get_eval_data(self):
+        x_train_mfcc = np.array([d[FeatureType.MFCC.name] for d in self.eval_data])
+        y_train_emo = np.array([d['y_emo'] for d in self.eval_data])
 
         return x_train_mfcc, y_train_emo, None
