@@ -6,6 +6,9 @@ class Datastore:
         pass
 
     def get_pre_train_data(self):
+        """
+        This will return the Pre-training Data Subset
+        """
         pass
 
     def get_eval_data(self):
