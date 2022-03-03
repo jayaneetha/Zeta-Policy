@@ -1,9 +1,7 @@
-from __future__ import division
-
 from rl.util import *
 
 
-class Policy(object):
+class Policy:
     """Abstract base class for all implemented policies.
 
     Each policy helps with selection of action to take on an environment.
@@ -16,7 +14,6 @@ class Policy(object):
     # Arguments
         agent (rl.core.Agent): Agent used
     """
-
     def _set_agent(self, agent):
         self.agent = agent
 
@@ -46,12 +43,11 @@ class LinearAnnealedPolicy(Policy):
     Linear Annealing Policy computes a current threshold value and
     transfers it to an inner policy which chooses the action. The threshold
     value is following a linear function decreasing over time."""
-
     def __init__(self, inner_policy, attr, value_max, value_min, value_test, nb_steps):
         if not hasattr(inner_policy, attr):
-            raise ValueError('Policy does not have attribute "{}".'.format(attr))
+            raise ValueError(f'Policy does not have attribute "{attr}".')
 
-        super(LinearAnnealedPolicy, self).__init__()
+        super().__init__()
 
         self.inner_policy = inner_policy
         self.attr = attr
@@ -91,7 +87,7 @@ class LinearAnnealedPolicy(Policy):
         # Returns
             List of metric names
         """
-        return ['mean_{}'.format(self.attr)]
+        return [f'mean_{self.attr}']
 
     @property
     def metrics(self):
@@ -109,7 +105,7 @@ class LinearAnnealedPolicy(Policy):
         # Returns
             Dict of config
         """
-        config = super(LinearAnnealedPolicy, self).get_config()
+        config = super().get_config()
         config['attr'] = self.attr
         config['value_max'] = self.value_max
         config['value_min'] = self.value_min
@@ -117,7 +113,6 @@ class LinearAnnealedPolicy(Policy):
         config['nb_steps'] = self.nb_steps
         config['inner_policy'] = get_object_config(self.inner_policy)
         return config
-
 
 class SoftmaxPolicy(Policy):
     """ Implement softmax policy for multinimial distribution
@@ -127,7 +122,6 @@ class SoftmaxPolicy(Policy):
     - takes action according to the pobability distribution
 
     """
-
     def select_action(self, nb_actions, probs):
         """Return the selected action
 
@@ -141,7 +135,6 @@ class SoftmaxPolicy(Policy):
         action = np.random.choice(range(nb_actions), p=probs)
         return action
 
-
 class EpsGreedyQPolicy(Policy):
     """Implement the epsilon greedy policy
 
@@ -150,9 +143,8 @@ class EpsGreedyQPolicy(Policy):
     - takes a random action with probability epsilon
     - takes current best action with prob (1 - epsilon)
     """
-
     def __init__(self, eps=.1):
-        super(EpsGreedyQPolicy, self).__init__()
+        super().__init__()
         self.eps = eps
 
     def select_action(self, q_values):
@@ -179,7 +171,7 @@ class EpsGreedyQPolicy(Policy):
         # Returns
             Dict of config
         """
-        config = super(EpsGreedyQPolicy, self).get_config()
+        config = super().get_config()
         config['eps'] = self.eps
         return config
 
@@ -189,7 +181,6 @@ class GreedyQPolicy(Policy):
 
     Greedy policy returns the current best action according to q_values
     """
-
     def select_action(self, q_values):
         """Return the selected action
 
@@ -210,9 +201,8 @@ class BoltzmannQPolicy(Policy):
     Boltzmann Q Policy builds a probability law on q values and returns
     an action selected randomly according to this law.
     """
-
     def __init__(self, tau=1., clip=(-500., 500.)):
-        super(BoltzmannQPolicy, self).__init__()
+        super().__init__()
         self.tau = tau
         self.clip = clip
 
@@ -240,7 +230,7 @@ class BoltzmannQPolicy(Policy):
         # Returns
             Dict of config
         """
-        config = super(BoltzmannQPolicy, self).get_config()
+        config = super().get_config()
         config['tau'] = self.tau
         config['clip'] = self.clip
         return config
@@ -255,9 +245,8 @@ class MaxBoltzmannQPolicy(Policy):
 
     https://pure.uva.nl/ws/files/3153478/8461_UBA003000033.pdf
     """
-
     def __init__(self, eps=.1, tau=1., clip=(-500., 500.)):
-        super(MaxBoltzmannQPolicy, self).__init__()
+        super().__init__()
         self.eps = eps
         self.tau = tau
         self.clip = clip
@@ -291,7 +280,7 @@ class MaxBoltzmannQPolicy(Policy):
         # Returns
             Dict of config
         """
-        config = super(MaxBoltzmannQPolicy, self).get_config()
+        config = super().get_config()
         config['eps'] = self.eps
         config['tau'] = self.tau
         config['clip'] = self.clip
@@ -315,7 +304,7 @@ class BoltzmannGumbelQPolicy(Policy):
 
     def __init__(self, C=1.0):
         assert C > 0, "BoltzmannGumbelQPolicy C parameter must be > 0, not " + repr(C)
-        super(BoltzmannGumbelQPolicy, self).__init__()
+        super().__init__()
         self.C = C
         self.action_counts = None
 
@@ -359,6 +348,6 @@ class BoltzmannGumbelQPolicy(Policy):
         # Returns
             Dict of config
         """
-        config = super(BoltzmannGumbelQPolicy, self).get_config()
+        config = super().get_config()
         config['C'] = self.C
         return config

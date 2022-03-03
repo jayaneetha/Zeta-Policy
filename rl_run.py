@@ -1,10 +1,9 @@
 import argparse
+import os
 
 import gym
-import os
 import tensorflow as tf
-from keras import Input
-from keras.optimizers import Adam
+from tensorflow.keras import Input
 
 import models
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH
@@ -12,11 +11,14 @@ from data_versions import DataVersions
 from datastore import Datastore
 from environments import IemocapEnv, SaveeEnv, ImprovEnv, ESDEnv
 from rl.agents import DQNAgent
-from rl.callbacks import ModelIntervalCheckpoint, FileLogger, WandbLogger
+from rl.callbacks import ModelIntervalCheckpoint, FileLogger
 from rl.memory import SequentialMemory
 from rl.policy import MaxBoltzmannQPolicy, Policy, LinearAnnealedPolicy, EpsGreedyQPolicy, SoftmaxPolicy, GreedyQPolicy, \
     BoltzmannQPolicy, BoltzmannGumbelQPolicy
 from rl_custom_policy import ZetaPolicy
+
+
+# from keras.optimizers import Adam
 
 
 def parse_policy(args) -> Policy:
@@ -90,11 +92,12 @@ def run():
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
-    config = tf.ConfigProto(gpu_options=gpu_options)
-    config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
-    tf.compat.v1.keras.backend.set_session(sess)
+    print(tf.__version__)
+    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
+    # config = tf.ConfigProto(gpu_options=gpu_options)
+    # config.gpu_options.allow_growth = True
+    # sess = tf.Session(config=config)
+    # tf.compat.v1.keras.backend.set_session(sess)
 
     policy = parse_policy(args)
     data_version = args.data_version
@@ -134,8 +137,10 @@ def run():
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                    nb_steps_warmup=args.warmup_steps, gamma=.99, target_model_update=10000,
-                   train_interval=4, delta_clip=1., train_max_steps=args.max_train_steps)
-    dqn.compile(Adam(lr=.00025), metrics=['mae', 'accuracy'])
+                   train_interval=4, delta_clip=1.,
+                   # train_max_steps=args.max_train_steps
+                   )
+    dqn.compile('adam', metrics=['mae', 'accuracy'])
 
     if args.pre_train:
         from feature_type import FeatureType
@@ -162,8 +167,8 @@ def run():
 
         x_train, y_train, y_gen_train = datastore.get_pre_train_data()
 
-        dqn.pre_train(x=x_train.reshape((len(x_train), 1, NUM_MFCC, NO_features)), y=y_train,
-                      EPOCHS=args.pretrain_epochs, batch_size=128)
+        # dqn.pre_train(x=x_train.reshape((len(x_train), 1, NUM_MFCC, NO_features)), y=y_train,
+        #               EPOCHS=args.pretrain_epochs, batch_size=128)
 
     if args.mode == 'train':
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
@@ -174,9 +179,9 @@ def run():
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=100)]
 
-        if not args.disable_wandb:
-            wandb_project_name = 'zeta-policy'
-            callbacks += [WandbLogger(project=wandb_project_name, name=args.env_name)]
+        # if not args.disable_wandb:
+        #     wandb_project_name = 'zeta-policy'
+        #     callbacks += [WandbLogger(project=wandb_project_name, name=args.env_name)]
 
         dqn.fit(env, callbacks=callbacks, nb_steps=args.nb_steps, log_interval=10000)
 

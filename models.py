@@ -1,5 +1,5 @@
-from keras import Model
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, \
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, \
     Dense, BatchNormalization, TimeDistributed, LSTM, concatenate
 
 from constants import EMOTIONS

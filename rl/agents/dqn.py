@@ -1,8 +1,6 @@
-from __future__ import division
-
 import warnings
-from keras import Model
-from keras.layers import Lambda, Input, Layer, Dense
+
+from tensorflow.keras.layers import Lambda, Input, Layer, Dense
 
 from rl.core import Agent
 from rl.policy import EpsGreedyQPolicy, GreedyQPolicy
@@ -16,12 +14,10 @@ def mean_q(y_true, y_pred):
 class AbstractDQNAgent(Agent):
     """Write me
     """
-
     def __init__(self, nb_actions, memory, gamma=.99, batch_size=32, nb_steps_warmup=1000,
                  train_interval=1, memory_interval=1, target_model_update=10000,
-                 train_max_steps=440000,
                  delta_range=None, delta_clip=np.inf, custom_model_objects={}, **kwargs):
-        super(AbstractDQNAgent, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Soft vs hard target model updates.
         if target_model_update < 0:
@@ -49,7 +45,6 @@ class AbstractDQNAgent(Agent):
         self.target_model_update = target_model_update
         self.delta_clip = delta_clip
         self.custom_model_objects = custom_model_objects
-        self.train_max_steps = train_max_steps
 
         # Related objects.
         self.memory = memory
@@ -58,7 +53,7 @@ class AbstractDQNAgent(Agent):
         self.compiled = False
 
     def process_state_batch(self, batch):
-        batch = np.array(batch)
+        batch = np.array(batch, dtype=object)
         if self.processor is None:
             return batch
         return self.processor.process_state_batch(batch)
@@ -87,7 +82,6 @@ class AbstractDQNAgent(Agent):
             'memory': get_object_config(self.memory),
         }
 
-
 # An implementation of the DQN agent as described in Mnih (2013) and Mnih (2015).
 # http://arxiv.org/pdf/1312.5602.pdf
 # http://arxiv.org/abs/1509.06461
@@ -103,21 +97,15 @@ class DQNAgent(AbstractDQNAgent):
             `avg`: Q(s,a;theta) = V(s;theta) + (A(s,a;theta)-Avg_a(A(s,a;theta)))
             `max`: Q(s,a;theta) = V(s;theta) + (A(s,a;theta)-max_a(A(s,a;theta)))
             `naive`: Q(s,a;theta) = V(s;theta) + A(s,a;theta)
-
     """
-
     def __init__(self, model, policy=None, test_policy=None, enable_double_dqn=False, enable_dueling_network=False,
                  dueling_type='avg', *args, **kwargs):
-        super(DQNAgent, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Validate (important) input.
-        if hasattr(model.output, '__len__') and len(model.output) > 1:
+        if list(model.output.shape) != list((None, self.nb_actions)):
             raise ValueError(
-                'Model "{}" has more than one output. DQN expects a model that has a single output.'.format(model))
-        if model.output._keras_shape != (None, self.nb_actions):
-            raise ValueError(
-                'Model output "{}" has invalid shape. DQN expects a model that has one dimension for each action, in this case {}.'.format(
-                    model.output, self.nb_actions))
+                f'Model output "{model.output}" has invalid shape. DQN expects a model that has one dimension for each action, in this case {self.nb_actions}.')
 
         # Parameters.
         self.enable_double_dqn = enable_double_dqn
@@ -126,7 +114,7 @@ class DQNAgent(AbstractDQNAgent):
         if self.enable_dueling_network:
             # get the second last layer of the model, abandon the last layer
             layer = model.layers[-2]
-            nb_action = model.output._keras_shape[-1]
+            nb_action = model.output.shape[-1]
             # layer y has a shape (nb_action+1,)
             # y[:,0] represents V(s;theta)
             # y[:,1:] represents A(s,a;theta)
@@ -165,19 +153,8 @@ class DQNAgent(AbstractDQNAgent):
         # State.
         self.reset_states()
 
-    def pre_train(self, x, y, EPOCHS, batch_size=4):
-
-        print("Pre Training")
-        from framework import train
-
-        history, trained_model = train(model=self.model, x=x, y=y, EPOCHS=EPOCHS, batch_size=batch_size)
-
-        print(history)
-
-        self.model = trained_model
-
     def get_config(self):
-        config = super(DQNAgent, self).get_config()
+        config = super().get_config()
         config['enable_double_dqn'] = self.enable_double_dqn
         config['dueling_type'] = self.dueling_type
         config['enable_dueling_network'] = self.enable_dueling_network
@@ -274,7 +251,7 @@ class DQNAgent(AbstractDQNAgent):
             return metrics
 
         # Train the network on a single stochastic batch.
-        if self.step > self.nb_steps_warmup and self.step % self.train_interval == 0 and self.step < self.train_max_steps:
+        if self.step > self.nb_steps_warmup and self.step % self.train_interval == 0:
             experiences = self.memory.sample(self.batch_size)
             assert len(experiences) == self.batch_size
 
@@ -397,14 +374,13 @@ class DQNAgent(AbstractDQNAgent):
 class NAFLayer(Layer):
     """Write me
     """
-
     def __init__(self, nb_actions, mode='full', **kwargs):
         if mode not in ('full', 'diag'):
-            raise RuntimeError('Unknown mode "{}" in NAFLayer.'.format(self.mode))
+            raise RuntimeError(f'Unknown mode "{self.mode}" in NAFLayer.')
 
         self.nb_actions = nb_actions
         self.mode = mode
-        super(NAFLayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def call(self, x, mask=None):
         # TODO: validate input shape
@@ -493,7 +469,7 @@ class NAFLayer(Layer):
                     L = tmp[:, 0, :, :]
                     LT = tmp[:, 1, :, :]
             else:
-                raise RuntimeError('Unknown Keras backend "{}".'.format(K.backend()))
+                raise RuntimeError(f'Unknown Keras backend "{K.backend()}".')
             assert L is not None
             assert LT is not None
             P = K.batch_dot(L, LT)
@@ -537,7 +513,7 @@ class NAFLayer(Layer):
 
                 P = tf.scan(fn, L_flat, initializer=K.zeros((self.nb_actions, self.nb_actions)))
             else:
-                raise RuntimeError('Unknown Keras backend "{}".'.format(K.backend()))
+                raise RuntimeError(f'Unknown Keras backend "{K.backend()}".')
         assert P is not None
         assert K.ndim(P) == 3
 
@@ -560,7 +536,7 @@ class NAFLayer(Layer):
             raise RuntimeError("Expects 3 inputs: L, mu, a")
         for i, shape in enumerate(input_shape):
             if len(shape) != 2:
-                raise RuntimeError("Input {} has {} dimensions but should have 2".format(i, len(shape)))
+                raise RuntimeError(f"Input {i} has {len(shape)} dimensions but should have 2")
         assert self.mode in ('full', 'diag')
         if self.mode == 'full':
             expected_elements = (self.nb_actions * self.nb_actions + self.nb_actions) // 2
@@ -573,20 +549,19 @@ class NAFLayer(Layer):
             raise RuntimeError("Input 0 (L) should have {} elements but has {}".format(input_shape[0][1]))
         if input_shape[1][1] != self.nb_actions:
             raise RuntimeError(
-                "Input 1 (mu) should have {} elements but has {}".format(self.nb_actions, input_shape[1][1]))
+                f"Input 1 (mu) should have {self.nb_actions} elements but has {input_shape[1][1]}")
         if input_shape[2][1] != self.nb_actions:
             raise RuntimeError(
-                "Input 2 (action) should have {} elements but has {}".format(self.nb_actions, input_shape[1][1]))
+                f"Input 2 (action) should have {self.nb_actions} elements but has {input_shape[1][1]}")
         return input_shape[0][0], 1
 
 
 class NAFAgent(AbstractDQNAgent):
     """Write me
     """
-
     def __init__(self, V_model, L_model, mu_model, random_process=None,
                  covariance_mode='full', *args, **kwargs):
-        super(NAFAgent, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # TODO: Validate (important) input.
 
@@ -631,11 +606,10 @@ class NAFAgent(AbstractDQNAgent):
         # Build combined model.
         a_in = Input(shape=(self.nb_actions,), name='action_input')
         if type(self.V_model.input) is list:
-            observation_shapes = [i._keras_shape[1:] for i in self.V_model.input]
+            observation_shapes = [i.shape[1:] for i in self.V_model.input]
         else:
-            observation_shapes = [self.V_model.input._keras_shape[1:]]
-        os_in = [Input(shape=shape, name='observation_input_{}'.format(idx)) for idx, shape in
-                 enumerate(observation_shapes)]
+            observation_shapes = [self.V_model.input.shape[1:]]
+        os_in = [Input(shape=shape, name=f'observation_input_{idx}') for idx, shape in enumerate(observation_shapes)]
         L_out = self.L_model([a_in] + os_in)
         V_out = self.V_model(os_in)
 
@@ -751,7 +725,7 @@ class NAFAgent(AbstractDQNAgent):
         return self.combined_model.layers[:]
 
     def get_config(self):
-        config = super(NAFAgent, self).get_config()
+        config = super().get_config()
         config['V_model'] = get_object_config(self.V_model)
         config['mu_model'] = get_object_config(self.mu_model)
         config['L_model'] = get_object_config(self.L_model)

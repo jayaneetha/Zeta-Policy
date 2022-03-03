@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def tile_images(img_nhwc):
     """
     Tile N images into one big PxQ image
