@@ -1,9 +1,10 @@
 import argparse
-import os
 
 import gym
+import os
 import tensorflow as tf
 from tensorflow.keras import Input
+from tensorflow.keras.optimizers import Adam
 
 import models
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH
@@ -11,60 +12,9 @@ from data_versions import DataVersions
 from datastore import Datastore
 from environments import IemocapEnv, SaveeEnv, ImprovEnv, ESDEnv
 from rl.agents import DQNAgent
-from rl.callbacks import ModelIntervalCheckpoint, FileLogger
+from rl.callbacks import ModelIntervalCheckpoint, FileLogger, WandbLogger
 from rl.memory import SequentialMemory
-from rl.policy import MaxBoltzmannQPolicy, Policy, LinearAnnealedPolicy, EpsGreedyQPolicy, SoftmaxPolicy, GreedyQPolicy, \
-    BoltzmannQPolicy, BoltzmannGumbelQPolicy
-from rl_custom_policy import ZetaPolicy
-
-
-# from keras.optimizers import Adam
-
-
-def parse_policy(args) -> Policy:
-    pol: Policy = EpsGreedyQPolicy()
-    if args.policy == 'LinearAnnealedPolicy':
-        pol = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=0.05,
-                                   nb_steps=args.zeta_nb_steps)
-    if args.policy == 'SoftmaxPolicy':
-        pol = SoftmaxPolicy()
-    if args.policy == 'EpsGreedyQPolicy':
-        pol = EpsGreedyQPolicy()
-    if args.policy == 'GreedyQPolicy':
-        pol = GreedyQPolicy()
-    if args.policy == 'BoltzmannQPolicy':
-        pol = BoltzmannQPolicy()
-    if args.policy == 'MaxBoltzmannQPolicy':
-        pol = MaxBoltzmannQPolicy()
-    if args.policy == 'BoltzmannGumbelQPolicy':
-        pol = BoltzmannGumbelQPolicy()
-    if args.policy == 'ZetaPolicy':
-        pol = ZetaPolicy(zeta_nb_steps=args.zeta_nb_steps, eps=args.eps)
-
-    return pol
-
-
-def str2bool(v) -> bool:
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
-def str2dataset(v) -> DataVersions:
-    ds = v.lower()
-    if ds == 'iemocap':
-        return DataVersions.IEMOCAP
-    if ds == 'savee':
-        return DataVersions.SAVEE
-    if ds == 'improv':
-        return DataVersions.IMPROV
-    if ds == 'esd':
-        return DataVersions.ESD
+from utils import parse_policy, str2dataset, str2bool
 
 
 def run():
@@ -79,7 +29,6 @@ def run():
     parser.add_argument('--disable-wandb', type=str2bool, default=False)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
     parser.add_argument('--nb-steps', type=int, default=500000)
-    parser.add_argument('--max-train-steps', type=int, default=440000)
     parser.add_argument('--eps', type=float, default=0.1)
     parser.add_argument('--pre-train', type=str2bool, default=False)
     parser.add_argument('--pre-train-dataset',
@@ -92,12 +41,19 @@ def run():
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    print(tf.__version__)
-    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
-    # config = tf.ConfigProto(gpu_options=gpu_options)
-    # config.gpu_options.allow_growth = True
-    # sess = tf.Session(config=config)
-    # tf.compat.v1.keras.backend.set_session(sess)
+    print("Tensorflow version:", tf.__version__)
+
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logical_gpus = tf.config.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
 
     policy = parse_policy(args)
     data_version = args.data_version
@@ -137,10 +93,8 @@ def run():
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                    nb_steps_warmup=args.warmup_steps, gamma=.99, target_model_update=10000,
-                   train_interval=4, delta_clip=1.,
-                   # train_max_steps=args.max_train_steps
-                   )
-    dqn.compile('adam', metrics=['mae', 'accuracy'])
+                   train_interval=4, delta_clip=1.)
+    dqn.compile(Adam(learning_rate=.00025), metrics=['mae', 'accuracy'])
 
     if args.pre_train:
         from feature_type import FeatureType
@@ -165,7 +119,7 @@ def run():
 
         assert datastore is not None
 
-        x_train, y_train, y_gen_train = datastore.get_pre_train_data()
+        # x_train, y_train, y_gen_train = datastore.get_pre_train_data()
 
         # dqn.pre_train(x=x_train.reshape((len(x_train), 1, NUM_MFCC, NO_features)), y=y_train,
         #               EPOCHS=args.pretrain_epochs, batch_size=128)
@@ -179,9 +133,9 @@ def run():
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=100)]
 
-        # if not args.disable_wandb:
-        #     wandb_project_name = 'zeta-policy'
-        #     callbacks += [WandbLogger(project=wandb_project_name, name=args.env_name)]
+        if not args.disable_wandb:
+            wandb_project_name = 'zeta-policy'
+            callbacks += [WandbLogger(project=wandb_project_name, name=args.env_name)]
 
         dqn.fit(env, callbacks=callbacks, nb_steps=args.nb_steps, log_interval=10000)
 

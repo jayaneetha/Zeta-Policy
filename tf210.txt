@@ -1,0 +1,13 @@
+gym==0.14.0
+h5py==3.1.0
+librosa==0.7.0
+matplotlib==3.3.4
+numpy==1.19.4
+Pillow==8.3.1
+PyYAML==5.3.1
+scipy==1.4.1
+six==1.15.0
+SoundFile==0.10.2
+tqdm==4.62.1
+wandb==0.12.11
+tensorflow==2.1.0

@@ -1,6 +1,6 @@
 import warnings
-
 from tensorflow.keras.layers import Lambda, Input, Layer, Dense
+from tensorflow.python.keras.models import Model
 
 from rl.core import Agent
 from rl.policy import EpsGreedyQPolicy, GreedyQPolicy
