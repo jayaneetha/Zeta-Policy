@@ -136,6 +136,7 @@ def run():
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
 
+        print(f"Models: {models_dir}")
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
         # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
         weights_filename = f'{models_dir}/dqn_{args.env_name}_weights.h5f'
