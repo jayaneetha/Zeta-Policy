@@ -7,7 +7,7 @@ from tensorflow.keras import Input
 from tensorflow.keras.optimizers import Adam
 
 import models
-from constants import NUM_MFCC, NO_features, WINDOW_LENGTH
+from constants import NUM_MFCC, NO_features, WINDOW_LENGTH, RESULTS_ROOT
 from data_versions import DataVersions
 from datastore import Datastore
 from environments import IemocapEnv, SaveeEnv, ImprovEnv, ESDEnv
@@ -126,16 +126,16 @@ def run():
 
     if args.mode == 'train':
 
-        if not os.path.exists('/results/models'):
-            os.mkdir('/results/models')
-        if not os.path.exists('/results/logs'):
-            os.mkdir('/results/logs')
+        if not os.path.exists(f'{RESULTS_ROOT}/models'):
+            os.mkdir(f'{RESULTS_ROOT}/models')
+        if not os.path.exists(f'{RESULTS_ROOT}/logs'):
+            os.mkdir(f'{RESULTS_ROOT}/logs')
 
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
         # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
-        weights_filename = f'rl-files/models/dqn_{args.env_name}_weights.h5f'
-        checkpoint_weights_filename = 'rl-files/models/dqn_' + args.env_name + '_weights_{step}.h5f'
-        log_filename = 'rl-files/logs/dqn_{}_log.json'.format(args.env_name)
+        weights_filename = f'{RESULTS_ROOT}/models/models/dqn_{args.env_name}_weights.h5f'
+        checkpoint_weights_filename = RESULTS_ROOT + '/models/dqn_' + args.env_name + '_weights_{step}.h5f'
+        log_filename = RESULTS_ROOT + '/logs/dqn_{}_log.json'.format(args.env_name)
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=100)]
 
