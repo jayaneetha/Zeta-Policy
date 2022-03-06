@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 
 import gym
 import os
@@ -125,19 +126,23 @@ def run():
         #               EPOCHS=args.pretrain_epochs, batch_size=128)
 
     if args.mode == 'train':
+        time_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
-        if not os.path.exists(f'{RESULTS_ROOT}/models'):
-            os.mkdir(f'{RESULTS_ROOT}/models')
-        if not os.path.exists(f'{RESULTS_ROOT}/logs'):
-            os.mkdir(f'{RESULTS_ROOT}/logs')
+        models_dir = f'{RESULTS_ROOT}/{time_str}/models'
+        log_dir = f'{RESULTS_ROOT}/{time_str}/logs'
+
+        if not os.path.exists(models_dir):
+            os.makedirs(models_dir)
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
 
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
         # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
-        weights_filename = f'{RESULTS_ROOT}/models/models/dqn_{args.env_name}_weights.h5f'
-        checkpoint_weights_filename = RESULTS_ROOT + '/models/dqn_' + args.env_name + '_weights_{step}.h5f'
-        log_filename = RESULTS_ROOT + '/logs/dqn_{}_log.json'.format(args.env_name)
+        weights_filename = f'{models_dir}/dqn_{args.env_name}_weights.h5f'
+        checkpoint_weights_filename = models_dir + '/dqn_' + args.env_name + '_weights_{step}.h5f'
+        log_filename = log_dir + '/dqn_{}_log.json'.format(args.env_name)
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
-        callbacks += [FileLogger(log_filename, interval=100)]
+        callbacks += [FileLogger(log_filename, interval=10)]
 
         if not args.disable_wandb:
             wandb_project_name = 'zeta-policy'
