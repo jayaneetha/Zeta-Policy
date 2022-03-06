@@ -125,6 +125,12 @@ def run():
         #               EPOCHS=args.pretrain_epochs, batch_size=128)
 
     if args.mode == 'train':
+
+        if not os.path.exists('/results/models'):
+            os.mkdir('/results/models')
+        if not os.path.exists('/results/logs'):
+            os.mkdir('/results/logs')
+
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
         # can be prematurely aborted. Notice that now you can use the built-in Keras callbacks!
         weights_filename = f'rl-files/models/dqn_{args.env_name}_weights.h5f'

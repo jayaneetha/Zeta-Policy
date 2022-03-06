@@ -1,4 +1,4 @@
-from constants import PKL_ROOT
+from constants import DATA_ROOT
 from datastore import Datastore
 from feature_type import FeatureType
 from framework import read_hdf5
@@ -25,8 +25,8 @@ class IemocapDatastore(Datastore):
         #
         # self.data = rl_data
         # self.pre_train_data = pre_train_data
-        self.train_mfcc = read_hdf5(f"{PKL_ROOT}h5_data/train_vltp_noised_balanced_iemocap.h5", "mfcc")
-        self.train_emotion = read_hdf5(f"{PKL_ROOT}h5_data/train_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
+        self.train_mfcc = read_hdf5(f"{DATA_ROOT}h5_data/train_vltp_noised_balanced_iemocap.h5", "mfcc")
+        self.train_emotion = read_hdf5(f"{DATA_ROOT}h5_data/train_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
 
     def get_data(self):
         # training_data, testing_data = randomize_split(self.data)
@@ -50,13 +50,13 @@ class IemocapDatastore(Datastore):
         # y_train_gen = np.array([d['y_gen'] for d in training_data])
         #
         # return x_train_mfcc, y_train_emo, y_train_gen
-        mfcc = read_hdf5(f"{PKL_ROOT}h5_data/valid_vltp_noised_balanced_iemocap.h5", "mfcc")
-        emotion = read_hdf5(f"{PKL_ROOT}h5_data/valid_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
+        mfcc = read_hdf5(f"{DATA_ROOT}h5_data/valid_vltp_noised_balanced_iemocap.h5", "mfcc")
+        emotion = read_hdf5(f"{DATA_ROOT}h5_data/valid_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
 
         return mfcc, emotion, None
 
     def get_eval_data(self):
-        mfcc = read_hdf5(f"{PKL_ROOT}h5_data/test_vltp_noised_balanced_iemocap.h5", "mfcc")
-        emotion = read_hdf5(f"{PKL_ROOT}h5_data/test_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
+        mfcc = read_hdf5(f"{DATA_ROOT}h5_data/test_vltp_noised_balanced_iemocap.h5", "mfcc")
+        emotion = read_hdf5(f"{DATA_ROOT}h5_data/test_vltp_noised_balanced_iemocap.h5", "emotion_one_hot")
 
         return mfcc, emotion, None

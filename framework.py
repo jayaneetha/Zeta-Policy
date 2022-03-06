@@ -1,16 +1,16 @@
 import datetime
 import logging
-import os
 import pickle
 import sys
 from os import path
 
 import h5py
 import numpy as np
+import os
 import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-from constants import PKL_ROOT
+from constants import DATA_ROOT
 
 
 def randomize_split(data, split_ratio=0.8):
@@ -26,10 +26,10 @@ def randomize_split(data, split_ratio=0.8):
 
 
 def get_dataset(filename='signal-dataset.pkl'):
-    if not path.exists(PKL_ROOT + filename):
+    if not path.exists(DATA_ROOT + filename):
         download(filename)
 
-    with open(PKL_ROOT + filename, 'rb') as f:
+    with open(DATA_ROOT + filename, 'rb') as f:
         data = pickle.load(f)
         return data
 
@@ -41,7 +41,7 @@ def download(filename, base_url='https://s3-ap-southeast-1.amazonaws.com/usq.iot
 
     print('Beginning file download {}'.format(url))
 
-    store_file = PKL_ROOT + filename
+    store_file = DATA_ROOT + filename
     urllib.request.urlretrieve(url, store_file)
 
     print("Downloaded and saved to file: {}".format(store_file))

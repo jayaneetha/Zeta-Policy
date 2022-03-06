@@ -14,4 +14,4 @@ RUN mkdir -p rl-files/models && sudo chown user:user rl-files/models
 
 RUN pip install -r tf210.txt
 
-CMD ["python rl_run.py --data-version=esd --policy=ZetaPolicy --pre-train-dataset=esd --pre-train=true --env-name=Zeta2.0 --disable-wandb=True"]
+#CMD ["python rl_run.py --data-version=esd --policy=ZetaPolicy --pre-train-dataset=esd --pre-train=true --env-name=Zeta2.0 --disable-wandb=True"]
