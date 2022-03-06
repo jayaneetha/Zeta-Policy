@@ -27,7 +27,6 @@ def run():
     parser.add_argument('--data-version',
                         choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD],
                         type=str2dataset, default=DataVersions.IEMOCAP)
-    parser.add_argument('--disable-wandb', type=str2bool, default=False)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
     parser.add_argument('--nb-steps', type=int, default=500000)
     parser.add_argument('--eps', type=float, default=0.1)
@@ -39,6 +38,8 @@ def run():
     parser.add_argument('--warmup-steps', type=int, default=50000)
     parser.add_argument('--pretrain-epochs', type=int, default=64)
     parser.add_argument('--gpu', type=int, default=1)
+    parser.add_argument('--wandb-disable', type=str2bool, default=False)
+    parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -145,9 +146,13 @@ def run():
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=10)]
 
-        if not args.disable_wandb:
+        if not args.wandb_disable:
             wandb_project_name = 'zeta-policy'
-            callbacks += [WandbLogger(project=wandb_project_name, name=args.env_name)]
+            wandb_dir = f'{RESULTS_ROOT}/{time_str}/wandb'
+            if not os.path.exists(wandb_dir):
+                os.makedirs(wandb_dir)
+            callbacks += [
+                WandbLogger(project=wandb_project_name, name=args.env_name, mode=args.wandb_disable, dir=wandb_dir)]
 
         dqn.fit(env, callbacks=callbacks, nb_steps=args.nb_steps, log_interval=10000)
 
