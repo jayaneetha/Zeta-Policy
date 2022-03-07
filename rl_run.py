@@ -38,7 +38,7 @@ def run():
     parser.add_argument('--warmup-steps', type=int, default=50000)
     parser.add_argument('--pretrain-epochs', type=int, default=64)
     parser.add_argument('--gpu', type=int, default=1)
-    parser.add_argument('--wandb-disable', type=str2bool, default=False)
+    parser.add_argument('--wandb-disable', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])
     args = parser.parse_args()
 
@@ -152,7 +152,7 @@ def run():
             if not os.path.exists(wandb_dir):
                 os.makedirs(wandb_dir)
             callbacks += [
-                WandbLogger(project=wandb_project_name, name=args.env_name, mode=args.wandb_disable, dir=wandb_dir)]
+                WandbLogger(project=wandb_project_name, name=args.env_name, mode=args.wandb_mode, dir=wandb_dir)]
 
         dqn.fit(env, callbacks=callbacks, nb_steps=args.nb_steps, log_interval=10000)
 
