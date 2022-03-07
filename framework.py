@@ -75,9 +75,9 @@ def read_hdf5(hdf5_name, hdf5_path):
     return hdf5_data
 
 
-def train(model, x, y, EPOCHS, batch_size=4):
+def train(model, x, y, epochs, batch_size=4, log_base_dir='./logs'):
     print("Start Training")
-    log_dir = "logs/fit/" + model.name + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = log_base_dir + "/" + model.name + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
 
     callback_list = [
@@ -96,7 +96,7 @@ def train(model, x, y, EPOCHS, batch_size=4):
         ), tensorboard_callback]
 
     history = model.fit(x, y,
-                        batch_size=batch_size, epochs=EPOCHS,
+                        batch_size=batch_size, epochs=epochs,
                         validation_split=0.2,
                         verbose=True,
                         callbacks=callback_list)

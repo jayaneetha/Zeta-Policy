@@ -14,6 +14,7 @@ def mean_q(y_true, y_pred):
 class AbstractDQNAgent(Agent):
     """Write me
     """
+
     def __init__(self, nb_actions, memory, gamma=.99, batch_size=32, nb_steps_warmup=1000,
                  train_interval=1, memory_interval=1, target_model_update=10000,
                  delta_range=None, delta_clip=np.inf, custom_model_objects={}, **kwargs):
@@ -82,6 +83,7 @@ class AbstractDQNAgent(Agent):
             'memory': get_object_config(self.memory),
         }
 
+
 # An implementation of the DQN agent as described in Mnih (2013) and Mnih (2015).
 # http://arxiv.org/pdf/1312.5602.pdf
 # http://arxiv.org/abs/1509.06461
@@ -98,6 +100,7 @@ class DQNAgent(AbstractDQNAgent):
             `max`: Q(s,a;theta) = V(s;theta) + (A(s,a;theta)-max_a(A(s,a;theta)))
             `naive`: Q(s,a;theta) = V(s;theta) + A(s,a;theta)
     """
+
     def __init__(self, model, policy=None, test_policy=None, enable_double_dqn=False, enable_dueling_network=False,
                  dueling_type='avg', *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -152,6 +155,16 @@ class DQNAgent(AbstractDQNAgent):
 
         # State.
         self.reset_states()
+
+    def pre_train(self, x, y, epochs, batch_size=4, log_base_dir='./logs'):
+        print(f"Pre Training for {epochs} epochs bs: {batch_size} storing logs: {log_base_dir}")
+
+        from framework import train
+
+        history, trained_model = train(model=self.model, x=x, y=y, epochs=epochs, batch_size=batch_size,
+                                       log_base_dir=log_base_dir)
+
+        self.model = trained_model
 
     def get_config(self):
         config = super().get_config()
@@ -374,6 +387,7 @@ class DQNAgent(AbstractDQNAgent):
 class NAFLayer(Layer):
     """Write me
     """
+
     def __init__(self, nb_actions, mode='full', **kwargs):
         if mode not in ('full', 'diag'):
             raise RuntimeError(f'Unknown mode "{self.mode}" in NAFLayer.')
@@ -559,6 +573,7 @@ class NAFLayer(Layer):
 class NAFAgent(AbstractDQNAgent):
     """Write me
     """
+
     def __init__(self, V_model, L_model, mu_model, random_process=None,
                  covariance_mode='full', *args, **kwargs):
         super().__init__(*args, **kwargs)

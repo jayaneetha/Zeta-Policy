@@ -17,6 +17,7 @@ from rl.callbacks import ModelIntervalCheckpoint, FileLogger, WandbLogger
 from rl.memory import SequentialMemory
 from utils import parse_policy, str2dataset, str2bool
 
+time_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
 def run():
     parser = argparse.ArgumentParser()
@@ -44,6 +45,8 @@ def run():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     print("Tensorflow version:", tf.__version__)
+
+    tf.compat.v1.enable_eager_execution()
 
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
@@ -121,13 +124,16 @@ def run():
 
         assert datastore is not None
 
-        # x_train, y_train, y_gen_train = datastore.get_pre_train_data()
+        x_train, y_train, y_gen_train = datastore.get_pre_train_data()
 
-        # dqn.pre_train(x=x_train.reshape((len(x_train), 1, NUM_MFCC, NO_features)), y=y_train,
-        #               EPOCHS=args.pretrain_epochs, batch_size=128)
+        pre_train_log_dir = f'{RESULTS_ROOT}/{time_str}/logs/pre_train'
+        if not os.path.exists(pre_train_log_dir):
+            os.makedirs(pre_train_log_dir)
+
+        dqn.pre_train(x=x_train.reshape((len(x_train), 1, NUM_MFCC, NO_features)), y=y_train,
+                      epochs=args.pretrain_epochs, batch_size=128, log_base_dir=pre_train_log_dir)
 
     if args.mode == 'train':
-        time_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
         models_dir = f'{RESULTS_ROOT}/{time_str}/models'
         log_dir = f'{RESULTS_ROOT}/{time_str}/logs'
@@ -135,7 +141,7 @@ def run():
         if not os.path.exists(models_dir):
             os.makedirs(models_dir)
         if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
+            os.makedirs(log_dir)
 
         print(f"Models: {models_dir}")
         # Okay, now it's time to learn something! We capture the interrupt exception so that training
