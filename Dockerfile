@@ -1,5 +1,7 @@
 FROM jayaneetha/images:tf2.1.0-gpu-py3.6.8-base
 
+RUN sudo apt update && sudo apt install -y nano
+
 WORKDIR /app
 
 COPY tf210.txt .
