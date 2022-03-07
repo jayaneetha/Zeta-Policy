@@ -288,6 +288,7 @@ class FileLogger(Callback):
         self.metrics = {}
         self.starts = {}
         self.data = {}
+        self.correct_inference = {}
 
     def on_train_begin(self, logs):
         """ Initialize model metrics before training """
@@ -303,6 +304,7 @@ class FileLogger(Callback):
         assert episode not in self.starts
         self.metrics[episode] = []
         self.starts[episode] = timeit.default_timer()
+        self.correct_inference[episode] = []
 
     def on_episode_end(self, episode, logs):
         """ Compute and print metrics at the end of each episode """
@@ -318,6 +320,7 @@ class FileLogger(Callback):
         data = list(zip(self.metrics_names, mean_metrics))
         data += list(logs.items())
         data += [('episode', episode), ('duration', duration)]
+        data += [('correct_inference', np.sum(self.correct_inference[episode]))]
         for key, value in data:
             if key not in self.data:
                 self.data[key] = []
@@ -329,10 +332,16 @@ class FileLogger(Callback):
         # Clean up.
         del self.metrics[episode]
         del self.starts[episode]
+        del self.correct_inference[episode]
 
     def on_step_end(self, step, logs):
         """ Append metric at the end of each step """
         self.metrics[logs['episode']].append(logs['metrics'])
+
+        try:
+            self.correct_inference[logs['episode']].append(int(logs['info']['correct_inference']))
+        except KeyError:
+            pass
 
     def save_data(self):
         """ Save metrics in a json file """
