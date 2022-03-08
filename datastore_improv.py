@@ -1,46 +1,37 @@
-import numpy as np
-
+from constants import DATA_ROOT
 from datastore import Datastore
 from feature_type import FeatureType
-from framework import get_dataset, randomize_split
+from framework import read_hdf5
 
 
 class ImprovDatastore(Datastore):
-    data = []
-    pre_train_data = []
+    def __init__(self, feature_type: FeatureType, custom_split: float = None):
+        if not (FeatureType.MFCC == feature_type):
+            raise Exception("Only supports {}".format(FeatureType.MFCC.name))
 
-    def __init__(self, sr: int = 44) -> None:
-        self.data_pkl = get_dataset('improv-4_Class-sr_' + str(sr) + 'k_2sec.pkl')
+        base_h5_file = "vltp_noised_balanced_mspimprov.h5"
 
-        for d in self.data_pkl:
-            self.data.append({
-                FeatureType.MFCC.name: d['x'],
-                'y_emo': d['emo'],
-                'y_gen': d['gen'],
-                'path': d['path']
-            })
+        if custom_split is None:
+            self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "mfcc")
+            self.train_emotion = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "emotion_one_hot")
+            self.target_mfcc = read_hdf5(f"{DATA_ROOT}/test_{base_h5_file}", "mfcc")
+            self.target_emotion = read_hdf5(f"{DATA_ROOT}/test_{base_h5_file}", "emotion_one_hot")
+        else:
+            assert 0 < custom_split < 1
+            mfcc = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "mfcc")
+            emotion_one_hot = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "emotion_one_hot")
 
-        rl_data, pre_train_data = randomize_split(self.data, split_ratio=0.7)
+            training_count = int((len(mfcc) * custom_split))
+            self.train_mfcc = mfcc[:training_count]
+            self.train_emotion = emotion_one_hot[:training_count]
+            self.target_mfcc = mfcc[training_count:]
+            self.target_emotion = emotion_one_hot[training_count:]
 
-        self.data = rl_data
-        self.pre_train_data = pre_train_data
+        assert len(self.train_mfcc) == len(self.train_emotion)
+        assert len(self.target_mfcc) == len(self.target_emotion)
 
     def get_data(self):
-        training_data, testing_data = randomize_split(self.data)
-        x_train_mfcc = np.array([d[FeatureType.MFCC.name] for d in training_data])
-        y_train_emo = np.array([d['y_emo'] for d in training_data])
-        y_train_gen = np.array([d['y_gen'] for d in training_data])
+        return (self.train_mfcc, self.train_emotion, None), (None, None, None)
 
-        x_test_mfcc = np.array([d[FeatureType.MFCC.name] for d in testing_data])
-        y_test_emo = np.array([d['y_emo'] for d in testing_data])
-        y_test_gen = np.array([d['y_gen'] for d in testing_data])
-        return (x_train_mfcc, y_train_emo, y_train_gen), (x_test_mfcc, y_test_emo, y_test_gen)
-
-    def get_pre_train_data(self):
-        training_data = self.pre_train_data
-
-        x_train_mfcc = np.array([d[FeatureType.MFCC.name] for d in training_data])
-        y_train_emo = np.array([d['y_emo'] for d in training_data])
-        y_train_gen = np.array([d['y_gen'] for d in training_data])
-
-        return x_train_mfcc, y_train_emo, y_train_gen
+    def get_testing_data(self):
+        return self.target_mfcc, self.target_emotion, None

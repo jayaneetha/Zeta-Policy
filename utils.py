@@ -61,12 +61,15 @@ def get_datastore(data_version: DataVersions, feature_type: FeatureType = Featur
                   custom_split: float = None) -> Datastore:
     if data_version == DataVersions.IEMOCAP:
         from datastore_iemocap import IemocapDatastore
-
         return IemocapDatastore(feature_type, custom_split)
 
     if data_version == DataVersions.ESD:
         from datastore_esd import ESDDatastore
         return ESDDatastore(feature_type, custom_split)
+
+    if data_version == DataVersions.IMPROV:
+        from datastore_improv import ImprovDatastore
+        return ImprovDatastore(feature_type, custom_split)
 
     raise NotImplementedError(data_version)
 
@@ -79,6 +82,10 @@ def get_environment(data_version: DataVersions, datastore: Datastore, custom_spl
     if data_version == DataVersions.ESD:
         from environments import ESDEnv
         return ESDEnv(data_version, datastore=datastore, custom_split=custom_split)
+
+    if data_version == DataVersions.IMPROV:
+        from environments import ImprovEnv
+        return ImprovEnv(data_version, datastore=datastore, custom_split=custom_split)
 
     if data_version == DataVersions.COMBINED:
         from environments import CombinedEnv
