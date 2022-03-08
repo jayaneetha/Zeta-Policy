@@ -75,9 +75,10 @@ def run():
             custom_data_split.append(None)
 
     if len(args.data_version) == 1:
-        target_datastore = get_datastore(data_version=args.data_version[0], custom_split=args.data_split[0])
+        target_datastore = get_datastore(data_version=args.data_version[0],
+                                         custom_split=None if args.data_split is None else args.data_split[0])
         env = get_environment(data_version=args.data_version[0], datastore=target_datastore,
-                              custom_split=args.data_split[0])
+                              custom_split=None if args.data_split is None else args.data_split[0])
     else:
         ds = []
         for i in range(len(args.data_version)):
