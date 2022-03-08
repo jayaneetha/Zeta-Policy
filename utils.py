@@ -80,20 +80,38 @@ def get_environment(data_version: DataVersions, datastore: Datastore, custom_spl
         from environments import ESDEnv
         return ESDEnv(data_version, datastore=datastore, custom_split=custom_split)
 
+    if data_version == DataVersions.COMBINED:
+        from environments import CombinedEnv
+        return CombinedEnv(data_version, datastore=datastore, custom_split=custom_split)
+
     raise NotImplementedError(data_version)
 
 
-def combine_datastores(ds1: Datastore, ds2: Datastore) -> Datastore:
-    (x_train_1, y_train_1, _), _ = ds1.get_data()
-    (x_train_2, y_train_2, _), _ = ds2.get_data()
+def combine_datastores(datastores: list) -> Datastore:
+    ds1 = datastores[0]
+    (x_train, y_train, _), _ = ds1.get_data()
+    (x_target, y_target, _) = ds1.get_testing_data()
 
-    x_train = np.concatenate([x_train_1, x_train_2], axis=0)
-    y_train = np.concatenate([y_train_1, y_train_2], axis=0)
+    for i in range(1, len(datastores)):
+        ds2 = datastores[i]
+        (x_train_2, y_train_2, _), _ = ds2.get_data()
+        x_train = np.concatenate([x_train, x_train_2], axis=0)
+        y_train = np.concatenate([y_train, y_train_2], axis=0)
 
-    (x_target_1, y_target_1, _) = ds1.get_testing_data()
-    (x_target_2, y_target_2, _) = ds2.get_testing_data()
-    x_target = np.concatenate([x_target_1, x_target_2], axis=0)
-    y_target = np.concatenate([y_target_1, y_target_2], axis=0)
+        (x_target_2, y_target_2, _) = ds2.get_testing_data()
+        x_target = np.concatenate([x_target, x_target_2], axis=0)
+        y_target = np.concatenate([y_target, y_target_2], axis=0)
+
+    # (x_train_1, y_train_1, _), _ = ds1.get_data()
+    # (x_train_2, y_train_2, _), _ = ds2.get_data()
+    #
+    # x_train = np.concatenate([x_train_1, x_train_2], axis=0)
+    # y_train = np.concatenate([y_train_1, y_train_2], axis=0)
+    #
+    # (x_target_1, y_target_1, _) = ds1.get_testing_data()
+    # (x_target_2, y_target_2, _) = ds2.get_testing_data()
+    # x_target = np.concatenate([x_target_1, x_target_2], axis=0)
+    # y_target = np.concatenate([y_target_1, y_target_2], axis=0)
 
     return CombinedDatastore(x_train, y_train, x_target, y_target)
 

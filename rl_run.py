@@ -24,10 +24,10 @@ def run():
     parser.add_argument('--env-name', type=str, default='iemocap-rl-v3.1')
     parser.add_argument('--weights', type=str, default=None)
     parser.add_argument('--policy', type=str, default='EpsGreedyQPolicy')
-    parser.add_argument('--data-version',
+    parser.add_argument('--data-version', nargs='+',
                         choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD],
                         type=str2dataset, default=DataVersions.IEMOCAP)
-    parser.add_argument('--data-split', type=float, default=None)
+    parser.add_argument('--data-split', nargs='+', type=float, default=None)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
     parser.add_argument('--nb-steps', type=int, default=500000)
     parser.add_argument('--eps', type=float, default=0.1)
@@ -60,12 +60,31 @@ def run():
             print(e)
 
     policy = parse_policy(args)
-    data_version = args.data_version
 
-    custom_data_split = args.data_split
+    custom_data_split = []
+    if args.data_split is not None:
+        if len(args.data_split) == 1 and len(args.data_version) > 1:
+            for i in range(len(args.data_version)):
+                custom_data_split.append(args.data_split[0])
+        elif 1 < len(args.data_split) != len(args.data_version) > 1:
+            raise RuntimeError("--data-split either should have one value or similar to --data-version")
+        else:
+            custom_data_split = args.data_split
+    else:
+        for i in range(len(args.data_version)):
+            custom_data_split.append(None)
 
-    target_datastore = get_datastore(data_version=data_version, custom_split=custom_data_split)
-    env = get_environment(data_version=data_version, datastore=target_datastore, custom_split=custom_data_split)
+    if len(args.data_version) == 1:
+        target_datastore = get_datastore(data_version=args.data_version[0], custom_split=args.data_split[0])
+        env = get_environment(data_version=args.data_version[0], datastore=target_datastore,
+                              custom_split=args.data_split[0])
+    else:
+        ds = []
+        for i in range(len(args.data_version)):
+            d = get_datastore(data_version=args.data_version[i], custom_split=custom_data_split[i])
+            ds.append(d)
+        target_datastore = combine_datastores(ds)
+        env = get_environment(data_version=DataVersions.COMBINED, datastore=target_datastore, custom_split=None)
 
     #
     # if data_version == DataVersions.IEMOCAP:
@@ -167,7 +186,7 @@ def run():
 
         # Testing with Labelled Data
         if pre_train_datastore is not None:
-            testing_datastore = combine_datastores(target_datastore, pre_train_datastore)
+            testing_datastore = combine_datastores([target_datastore, pre_train_datastore])
         else:
             testing_datastore = target_datastore
 
