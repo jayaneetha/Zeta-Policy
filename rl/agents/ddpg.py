@@ -1,7 +1,6 @@
 import os
-import warnings
-
 import tensorflow as tf
+import warnings
 
 tf.compat.v1.disable_eager_execution()
 

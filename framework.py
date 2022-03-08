@@ -88,8 +88,8 @@ def train(model, x, y, epochs, batch_size=4, log_base_dir='./logs'):
             mode='min'
         ),
         ModelCheckpoint(
-            filepath=model.name + '.h5',
-            monitor='val_acc',
+            filepath=log_base_dir + "/" + model.name + '.h5',
+            monitor='val_accuracy',
             save_best_only='True',
             verbose=1,
             mode='max'

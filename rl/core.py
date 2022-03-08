@@ -1,7 +1,6 @@
+import numpy as np
 import warnings
 from copy import deepcopy
-
-import numpy as np
 from tensorflow.keras.callbacks import History
 
 from rl.callbacks import (

@@ -1,7 +1,6 @@
 import argparse
 from datetime import datetime
 
-import gym
 import os
 import tensorflow as tf
 from tensorflow.keras import Input
@@ -11,13 +10,13 @@ import models
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH, RESULTS_ROOT
 from data_versions import DataVersions
 from datastore import Datastore
-from environments import IemocapEnv, SaveeEnv, ImprovEnv, ESDEnv
 from rl.agents import DQNAgent
 from rl.callbacks import ModelIntervalCheckpoint, FileLogger, WandbLogger
 from rl.memory import SequentialMemory
-from utils import parse_policy, str2dataset, str2bool
+from utils import parse_policy, str2dataset, str2bool, get_datastore, get_environment, combine_datastores, store_results
 
 time_str = datetime.now().strftime("%Y_%m_%d_%H_%M")
+
 
 def run():
     parser = argparse.ArgumentParser()
@@ -28,6 +27,7 @@ def run():
     parser.add_argument('--data-version',
                         choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD],
                         type=str2dataset, default=DataVersions.IEMOCAP)
+    parser.add_argument('--data-split', type=float, default=None)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
     parser.add_argument('--nb-steps', type=int, default=500000)
     parser.add_argument('--eps', type=float, default=0.1)
@@ -36,6 +36,7 @@ def run():
                         choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD],
                         type=str2dataset,
                         default=DataVersions.IEMOCAP)
+    parser.add_argument('--pre-train-data-split', type=float, default=None)
     parser.add_argument('--warmup-steps', type=int, default=50000)
     parser.add_argument('--pretrain-epochs', type=int, default=64)
     parser.add_argument('--gpu', type=int, default=1)
@@ -61,19 +62,31 @@ def run():
     policy = parse_policy(args)
     data_version = args.data_version
 
-    env: gym.Env = None
+    custom_data_split = args.data_split
 
-    if data_version == DataVersions.IEMOCAP:
-        env = IemocapEnv(data_version)
+    target_datastore = get_datastore(data_version=data_version, custom_split=custom_data_split)
+    env = get_environment(data_version=data_version, datastore=target_datastore, custom_split=custom_data_split)
 
-    if data_version == DataVersions.SAVEE:
-        env = SaveeEnv(data_version)
-
-    if data_version == DataVersions.IMPROV:
-        env = ImprovEnv(data_version)
-
-    if data_version == DataVersions.ESD:
-        env = ESDEnv(data_version)
+    #
+    # if data_version == DataVersions.IEMOCAP:
+    #     from datastore_iemocap import IemocapDatastore
+    #     from feature_type import FeatureType
+    #
+    #     training_datastore = IemocapDatastore(FeatureType.MFCC, custom_data_split)
+    #     env = IemocapEnv(data_version, datastore=training_datastore, custom_split=custom_data_split)
+    #
+    # if data_version == DataVersions.SAVEE:
+    #     env = SaveeEnv(data_version)
+    #
+    # if data_version == DataVersions.IMPROV:
+    #     env = ImprovEnv(data_version)
+    #
+    # if data_version == DataVersions.ESD:
+    #     from datastore_esd import ESDDatastore
+    #     from feature_type import FeatureType
+    #
+    #     training_datastore = ESDDatastore(FeatureType.MFCC, custom_data_split)
+    #     env = ESDEnv(data_version, datastore=training_datastore, custom_split=custom_data_split)
 
     for k in args.__dict__.keys():
         print("\t{} :\t{}".format(k, args.__dict__[k]))
@@ -99,30 +112,18 @@ def run():
                    train_interval=4, delta_clip=1.)
     dqn.compile(Adam(learning_rate=.00025), metrics=['mae', 'accuracy'])
 
+    pre_train_datastore: Datastore = None
     if args.pre_train:
-        from feature_type import FeatureType
 
-        datastore: Datastore = None
+        if args.pre_train_dataset == args.data_version:
+            raise RuntimeError("Pre-Train and Target datasets cannot be the same")
+        else:
+            pre_train_datastore = get_datastore(data_version=args.pre_train_dataset,
+                                                custom_split=args.pre_train_data_split)
 
-        if args.pre_train_dataset == DataVersions.IEMOCAP:
-            from datastore_iemocap import IemocapDatastore
-            datastore = IemocapDatastore(FeatureType.MFCC)
+        assert pre_train_datastore is not None
 
-        if args.pre_train_dataset == DataVersions.IMPROV:
-            from datastore_improv import ImprovDatastore
-            datastore = ImprovDatastore(22)
-
-        if args.pre_train_dataset == DataVersions.SAVEE:
-            from datastore_savee import SaveeDatastore
-            datastore = SaveeDatastore(FeatureType.MFCC)
-
-        if args.pre_train_dataset == DataVersions.ESD:
-            from datastore_esd import ESDDatastore
-            datastore = ESDDatastore(FeatureType.MFCC)
-
-        assert datastore is not None
-
-        x_train, y_train, y_gen_train = datastore.get_pre_train_data()
+        (x_train, y_train, y_gen_train), _ = pre_train_datastore.get_data()
 
         pre_train_log_dir = f'{RESULTS_ROOT}/{time_str}/logs/pre_train'
         if not os.path.exists(pre_train_log_dir):
@@ -159,12 +160,28 @@ def run():
                 WandbLogger(project=wandb_project_name, name=args.env_name, mode=args.wandb_mode, dir=wandb_dir)]
 
         dqn.fit(env, callbacks=callbacks, nb_steps=args.nb_steps, log_interval=10000)
+        model = dqn.model
 
         # After training is done, we save the final weights one more time.
         dqn.save_weights(weights_filename, overwrite=True)
 
-        # Finally, evaluate our algorithm for 10 episodes.
-        dqn.test(env, nb_episodes=10, visualize=False)
+        # Testing with Labelled Data
+        if pre_train_datastore is not None:
+            testing_datastore = combine_datastores(target_datastore, pre_train_datastore)
+        else:
+            testing_datastore = target_datastore
+
+        x_test, y_test, _ = testing_datastore.get_testing_data()
+        test_loss, test_mae, test_acc, test_mean_q = model.evaluate(
+            x_test.reshape((len(x_test), 1, NUM_MFCC, NO_features)), y_test, verbose=1)
+
+        print(f"Test\n\t Accuracy: {test_acc}")
+
+        store_results(f"{log_dir}/results.txt", args=args, experiment=experiment_name, time_str=time_str,
+                      test_loss=test_loss, test_acc=test_acc)
+
+        # # Finally, evaluate our algorithm for 10 episodes.
+        # dqn.test(env, nb_episodes=10, visualize=False)
 
     elif args.mode == 'test':
         weights_filename = f'rl-files/models/dqn_{args.env_name}_weights.h5f'

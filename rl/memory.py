@@ -1,9 +1,9 @@
-import copy
-import random
-import warnings
 from collections import deque, namedtuple
 
+import copy
 import numpy as np
+import random
+import warnings
 
 # This is to be understood as a transition: Given `state0`, performing `action`
 # yields `reward` and results in `state1`, which might be `terminal`.

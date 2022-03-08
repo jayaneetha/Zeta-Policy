@@ -69,8 +69,10 @@ class AbstractEnv(gym.Env):
 class IemocapEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, data_version) -> None:
-        super().__init__(data_version=data_version, datastore=IemocapDatastore(FeatureType.MFCC))
+    def __init__(self, data_version, datastore: IemocapDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = IemocapDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
 
 
 class ImprovEnv(AbstractEnv):
@@ -90,5 +92,7 @@ class SaveeEnv(AbstractEnv):
 class ESDEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, data_version) -> None:
-        super().__init__(data_version=data_version, datastore=ESDDatastore(FeatureType.MFCC))
+    def __init__(self, data_version, datastore: ESDDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = ESDDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
