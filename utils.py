@@ -55,6 +55,8 @@ def str2dataset(v) -> DataVersions:
         return DataVersions.IMPROV
     if ds == 'esd':
         return DataVersions.ESD
+    if ds == 'combined':
+        return DataVersions.COMBINED
 
 
 def get_datastore(data_version: DataVersions, feature_type: FeatureType = FeatureType.MFCC,

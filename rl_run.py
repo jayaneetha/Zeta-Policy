@@ -39,6 +39,9 @@ def run():
     parser.add_argument('--pre-train-data-split', type=float, default=None)
     parser.add_argument('--warmup-steps', type=int, default=50000)
     parser.add_argument('--pretrain-epochs', type=int, default=64)
+    parser.add_argument('--testing-dataset', type=str2dataset, default=None,
+                        choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD,
+                                 DataVersions.COMBINED])
     parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--wandb-disable', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])
@@ -61,6 +64,7 @@ def run():
 
     policy = parse_policy(args)
 
+    data_version_map = {}
     custom_data_split = []
     if args.data_split is not None:
         if len(args.data_split) == 1 and len(args.data_version) > 1:
@@ -77,12 +81,14 @@ def run():
     if len(args.data_version) == 1:
         target_datastore = get_datastore(data_version=args.data_version[0],
                                          custom_split=None if args.data_split is None else args.data_split[0])
+        data_version_map[args.data_version[0]] = target_datastore
         env = get_environment(data_version=args.data_version[0], datastore=target_datastore,
                               custom_split=None if args.data_split is None else args.data_split[0])
     else:
         ds = []
         for i in range(len(args.data_version)):
             d = get_datastore(data_version=args.data_version[i], custom_split=custom_data_split[i])
+            data_version_map[args.data_version[i]] = d
             ds.append(d)
         target_datastore = combine_datastores(ds)
         env = get_environment(data_version=DataVersions.COMBINED, datastore=target_datastore, custom_split=None)
@@ -186,10 +192,21 @@ def run():
         dqn.save_weights(weights_filename, overwrite=True)
 
         # Testing with Labelled Data
-        if pre_train_datastore is not None:
-            testing_datastore = combine_datastores([target_datastore, pre_train_datastore])
+        testing_dataset = args.testing_dataset
+        if testing_dataset is not None:
+            if testing_dataset == DataVersions.COMBINED:
+                if pre_train_datastore is not None:
+                    testing_datastore = combine_datastores([target_datastore, pre_train_datastore])
+                else:
+                    testing_datastore = target_datastore
+            else:
+                testing_datastore = data_version_map[testing_dataset]
         else:
-            testing_datastore = target_datastore
+            # testing dataset is not defined
+            if pre_train_datastore is not None:
+                testing_datastore = combine_datastores([target_datastore, pre_train_datastore])
+            else:
+                testing_datastore = target_datastore
 
         x_test, y_test, _ = testing_datastore.get_testing_data()
         test_loss, test_mae, test_acc, test_mean_q = model.evaluate(
