@@ -50,6 +50,9 @@ def run():
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     print("Tensorflow version:", tf.__version__)
 
+    if os.path.exists(f'{RESULTS_ROOT}/{time_str}'):
+        raise RuntimeError(f'Results directory {RESULTS_ROOT}/{time_str} is already exists')
+
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         try:
