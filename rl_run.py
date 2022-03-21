@@ -45,6 +45,9 @@ def run():
     parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--wandb-disable', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])
+    parser.add_argument('--double-dqn', type=str2bool, default=False, choices=[True, False])
+    parser.add_argument('--dueling-network', type=str2bool, default=False, choices=[True, False])
+    parser.add_argument('--dueling-type', type=str, default='avg', choices=['avg', 'max', 'naive'])
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -96,27 +99,6 @@ def run():
         target_datastore = combine_datastores(ds)
         env = get_environment(data_version=DataVersions.COMBINED, datastore=target_datastore, custom_split=None)
 
-    #
-    # if data_version == DataVersions.IEMOCAP:
-    #     from datastore_iemocap import IemocapDatastore
-    #     from feature_type import FeatureType
-    #
-    #     training_datastore = IemocapDatastore(FeatureType.MFCC, custom_data_split)
-    #     env = IemocapEnv(data_version, datastore=training_datastore, custom_split=custom_data_split)
-    #
-    # if data_version == DataVersions.SAVEE:
-    #     env = SaveeEnv(data_version)
-    #
-    # if data_version == DataVersions.IMPROV:
-    #     env = ImprovEnv(data_version)
-    #
-    # if data_version == DataVersions.ESD:
-    #     from datastore_esd import ESDDatastore
-    #     from feature_type import FeatureType
-    #
-    #     training_datastore = ESDDatastore(FeatureType.MFCC, custom_data_split)
-    #     env = ESDEnv(data_version, datastore=training_datastore, custom_split=custom_data_split)
-
     for k in args.__dict__.keys():
         print("\t{} :\t{}".format(k, args.__dict__[k]))
         env.__setattr__("_" + k, args.__dict__[k])
@@ -138,7 +120,10 @@ def run():
 
     dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                    nb_steps_warmup=args.warmup_steps, gamma=.99, target_model_update=10000,
-                   train_interval=4, delta_clip=1.)
+                   train_interval=4, delta_clip=1.,
+                   enable_double_dqn=args.double_dqn,
+                   enable_dueling_network=args.dueling_network,
+                   dueling_type=args.dueling_type)
     dqn.compile(Adam(learning_rate=.00025), metrics=['mae', 'accuracy'])
 
     pre_train_datastore: Datastore = None
