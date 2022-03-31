@@ -1,10 +1,9 @@
 import argparse
+import os
 from datetime import datetime
 
-import os
 import tensorflow as tf
 from tensorflow.keras import Input
-from tensorflow.keras.optimizers import Adam
 
 import models
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH, RESULTS_ROOT
@@ -67,7 +66,7 @@ def run():
         except RuntimeError as e:
             # Memory growth must be set before GPUs have been initialized
             print(e)
-
+    tf.compat.v1.experimental.output_all_intermediates(True)
     policy = parse_policy(args)
 
     data_version_map = {}
@@ -124,7 +123,8 @@ def run():
                    enable_double_dqn=args.double_dqn,
                    enable_dueling_network=args.dueling_network,
                    dueling_type=args.dueling_type)
-    dqn.compile(Adam(learning_rate=.00025), metrics=['mae', 'accuracy'])
+    # dqn.compile(Adam(learning_rate=.00025), metrics=['mae', 'accuracy'])
+    dqn.compile('adam', metrics=['mae', 'accuracy'])
 
     pre_train_datastore: Datastore = None
     if args.pre_train:
