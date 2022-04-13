@@ -24,7 +24,8 @@ def run():
     parser.add_argument('--weights', type=str, default=None)
     parser.add_argument('--policy', type=str, default='EpsGreedyQPolicy')
     parser.add_argument('--data-version', nargs='+',
-                        choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD],
+                        choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD,
+                                 DataVersions.EMODB],
                         type=str2dataset, default=DataVersions.IEMOCAP)
     parser.add_argument('--data-split', nargs='+', type=float, default=None)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
@@ -32,7 +33,8 @@ def run():
     parser.add_argument('--eps', type=float, default=0.1)
     parser.add_argument('--pre-train', type=str2bool, default=False)
     parser.add_argument('--pre-train-dataset',
-                        choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD],
+                        choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD,
+                                 DataVersions.EMODB],
                         type=str2dataset,
                         default=DataVersions.IEMOCAP)
     parser.add_argument('--pre-train-data-split', type=float, default=None)
@@ -40,7 +42,7 @@ def run():
     parser.add_argument('--pretrain-epochs', type=int, default=64)
     parser.add_argument('--testing-dataset', type=str2dataset, default=None,
                         choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD,
-                                 DataVersions.COMBINED])
+                                 DataVersions.COMBINED, DataVersions.EMODB])
     parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--wandb-disable', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])

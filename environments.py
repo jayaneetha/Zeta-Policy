@@ -3,6 +3,7 @@ import numpy as np
 
 from constants import EMOTIONS, NUM_MFCC, NO_features
 from datastore import CombinedDatastore
+from datastore_emodb import EmoDBDatastore
 from datastore_esd import ESDDatastore
 from datastore_iemocap import IemocapDatastore
 from datastore_improv import ImprovDatastore
@@ -98,6 +99,15 @@ class ESDEnv(AbstractEnv):
     def __init__(self, data_version, datastore: ESDDatastore = None, custom_split: float = None) -> None:
         if datastore is None:
             datastore = ESDDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
+
+
+class EmoDBEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version, datastore: EmoDBDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = EmoDBDatastore(FeatureType.MFCC, custom_split)
         super().__init__(data_version=data_version, datastore=datastore)
 
 

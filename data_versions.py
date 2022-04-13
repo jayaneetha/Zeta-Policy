@@ -6,4 +6,5 @@ class DataVersions(Enum):
     SAVEE = 2,  # SAVEE dataset
     IMPROV = 3,  # MSP-IMPROV Dataset
     ESD = 4,  # ESD Dataset
-    COMBINED = 5  # Combined Dataset
+    COMBINED = 5,  # Combined Dataset
+    EMODB = 6  # Combined Dataset

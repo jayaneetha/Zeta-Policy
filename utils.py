@@ -57,6 +57,8 @@ def str2dataset(v) -> DataVersions:
         return DataVersions.ESD
     if ds == 'combined':
         return DataVersions.COMBINED
+    if ds == 'emodb':
+        return DataVersions.EMODB
 
 
 def get_datastore(data_version: DataVersions, feature_type: FeatureType = FeatureType.MFCC,
@@ -92,6 +94,10 @@ def get_environment(data_version: DataVersions, datastore: Datastore, custom_spl
     if data_version == DataVersions.COMBINED:
         from environments import CombinedEnv
         return CombinedEnv(data_version, datastore=datastore, custom_split=custom_split)
+
+    if data_version == DataVersions.EMODB:
+        from environments import EmoDBEnv
+        return EmoDBEnv(data_version, datastore=datastore, custom_split=custom_split)
 
     raise NotImplementedError(data_version)
 
