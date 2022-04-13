@@ -71,6 +71,10 @@ def get_datastore(data_version: DataVersions, feature_type: FeatureType = Featur
         from datastore_esd import ESDDatastore
         return ESDDatastore(feature_type, custom_split)
 
+    if data_version == DataVersions.EMODB:
+        from datastore_emodb import EmoDBDatastore
+        return EmoDBDatastore(feature_type, custom_split)
+
     if data_version == DataVersions.IMPROV:
         from datastore_improv import ImprovDatastore
         return ImprovDatastore(feature_type, custom_split)
