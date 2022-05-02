@@ -11,3 +11,4 @@ SoundFile==0.10.2
 tqdm==4.62.1
 wandb==0.12.11
 tensorflow==2.1.0
+pandas==1.1.5

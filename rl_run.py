@@ -1,7 +1,7 @@
 import argparse
-import os
 from datetime import datetime
 
+import os
 import tensorflow as tf
 from tensorflow.keras import Input
 
@@ -49,6 +49,9 @@ def run():
     parser.add_argument('--double-dqn', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--dueling-network', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--dueling-type', type=str, default='avg', choices=['avg', 'max', 'naive'])
+    parser.add_argument('--schedule-csv', type=str, default=None)
+    parser.add_argument('--schedule-idx', type=int, default=None)
+
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -216,6 +219,10 @@ def run():
             weights_filename = args.weights
         dqn.load_weights(weights_filename)
         dqn.test(env, nb_episodes=10, visualize=True)
+
+    if args.schedule_csv is not None:
+        from scheduler_callback import callback
+        callback(args.schedule_csv, args.schedule_idx)
 
 
 if __name__ == "__main__":
