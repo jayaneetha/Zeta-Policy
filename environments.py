@@ -2,6 +2,8 @@ import gym
 import numpy as np
 
 from constants import EMOTIONS, NUM_MFCC, NO_features
+from datastore import CombinedDatastore
+from datastore_emodb import EmoDBDatastore
 from datastore_esd import ESDDatastore
 from datastore_iemocap import IemocapDatastore
 from datastore_improv import ImprovDatastore
@@ -69,15 +71,19 @@ class AbstractEnv(gym.Env):
 class IemocapEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, data_version) -> None:
-        super().__init__(data_version=data_version, datastore=IemocapDatastore(FeatureType.MFCC))
+    def __init__(self, data_version, datastore: IemocapDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = IemocapDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
 
 
 class ImprovEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, data_version) -> None:
-        super().__init__(data_version=data_version, datastore=ImprovDatastore(sr=22))
+    def __init__(self, data_version, datastore: ImprovDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = ImprovDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
 
 
 class SaveeEnv(AbstractEnv):
@@ -90,5 +96,25 @@ class SaveeEnv(AbstractEnv):
 class ESDEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, data_version) -> None:
-        super().__init__(data_version=data_version, datastore=ESDDatastore(FeatureType.MFCC))
+    def __init__(self, data_version, datastore: ESDDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = ESDDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
+
+
+class EmoDBEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version, datastore: EmoDBDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = EmoDBDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
+
+
+class CombinedEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version, datastore: CombinedDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = CombinedDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)

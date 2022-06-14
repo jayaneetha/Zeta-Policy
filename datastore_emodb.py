@@ -4,12 +4,17 @@ from feature_type import FeatureType
 from framework import read_hdf5
 
 
-class ImprovDatastore(Datastore):
+class EmoDBDatastore(Datastore):
     def __init__(self, feature_type: FeatureType, custom_split: float = None):
         if not (FeatureType.MFCC == feature_type):
             raise Exception("Only supports {}".format(FeatureType.MFCC.name))
 
-        base_h5_file = "vltp_noised_balanced_mspimprov.h5"
+        base_h5_file = "vltp_noised_balanced_emodb.h5"
+
+        # self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_vltp_noised_balanced_esd.h5", "mfcc")
+        # self.train_emotion = read_hdf5(f"{DATA_ROOT}/train_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+        # self.target_mfcc = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "mfcc")
+        # self.target_emotion = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "emotion")
 
         if custom_split is None:
             self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "mfcc")
@@ -20,6 +25,7 @@ class ImprovDatastore(Datastore):
             assert 0 < custom_split < 1
             mfcc = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "mfcc")
             emotion_one_hot = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "emotion_one_hot")
+            # emotion = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "emotion")
 
             training_count = int((len(mfcc) * custom_split))
             self.train_mfcc = mfcc[:training_count]
@@ -33,5 +39,14 @@ class ImprovDatastore(Datastore):
     def get_data(self):
         return (self.train_mfcc, self.train_emotion, None), (None, None, None)
 
+    # def get_pre_train_data(self):
+    #     mfcc = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "mfcc")
+    #     emotion = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+    #
+    #     return mfcc, emotion, None
+
     def get_testing_data(self):
+        # mfcc = read_hdf5(f"{DATA_ROOT}/test_vltp_noised_balanced_esd.h5", "mfcc")
+        # emotion = read_hdf5(f"{DATA_ROOT}/test_vltp_noised_balanced_esd.h5", "emotion")
+
         return self.target_mfcc, self.target_emotion, None
