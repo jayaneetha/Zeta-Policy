@@ -1,8 +1,7 @@
 # Inspired from OpenAI Baselines
 
-import random
-
 import numpy as np
+import random
 
 
 def set_global_seeds(i):

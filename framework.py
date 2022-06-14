@@ -8,9 +8,9 @@ import h5py
 import numpy as np
 import os
 import tensorflow as tf
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-from constants import PKL_ROOT
+from constants import DATA_ROOT
 
 
 def randomize_split(data, split_ratio=0.8):
@@ -26,10 +26,10 @@ def randomize_split(data, split_ratio=0.8):
 
 
 def get_dataset(filename='signal-dataset.pkl'):
-    if not path.exists(PKL_ROOT + filename):
+    if not path.exists(DATA_ROOT + filename):
         download(filename)
 
-    with open(PKL_ROOT + filename, 'rb') as f:
+    with open(DATA_ROOT + filename, 'rb') as f:
         data = pickle.load(f)
         return data
 
@@ -41,7 +41,7 @@ def download(filename, base_url='https://s3-ap-southeast-1.amazonaws.com/usq.iot
 
     print('Beginning file download {}'.format(url))
 
-    store_file = PKL_ROOT + filename
+    store_file = DATA_ROOT + filename
     urllib.request.urlretrieve(url, store_file)
 
     print("Downloaded and saved to file: {}".format(store_file))
@@ -75,9 +75,9 @@ def read_hdf5(hdf5_name, hdf5_path):
     return hdf5_data
 
 
-def train(model, x, y, EPOCHS, batch_size=4):
+def train(model, x, y, epochs, batch_size=4, log_base_dir='./logs'):
     print("Start Training")
-    log_dir = "logs/fit/" + model.name + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = log_base_dir + "/" + model.name + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
 
     callback_list = [
@@ -88,15 +88,15 @@ def train(model, x, y, EPOCHS, batch_size=4):
             mode='min'
         ),
         ModelCheckpoint(
-            filepath=model.name + '.h5',
-            monitor='val_acc',
+            filepath=log_base_dir + "/" + model.name + '.h5',
+            monitor='val_accuracy',
             save_best_only='True',
             verbose=1,
             mode='max'
         ), tensorboard_callback]
 
     history = model.fit(x, y,
-                        batch_size=batch_size, epochs=EPOCHS,
+                        batch_size=batch_size, epochs=epochs,
                         validation_split=0.2,
                         verbose=True,
                         callbacks=callback_list)

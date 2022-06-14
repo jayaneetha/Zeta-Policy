@@ -1,7 +1,7 @@
-import keras.backend as K
-import keras.optimizers as optimizers
 import numpy as np
-from keras.models import model_from_config
+import tensorflow.keras.backend as K
+import tensorflow.keras.optimizers as optimizers
+from tensorflow.keras.models import model_from_config
 
 
 def clone_model(model, custom_objects={}):
@@ -17,9 +17,10 @@ def clone_model(model, custom_objects={}):
 
 def clone_optimizer(optimizer):
     if type(optimizer) is str:
+        print(optimizer)
         return optimizers.get(optimizer)
     # Requires Keras 1.0.7 since get_config has breaking changes.
-    params = dict([(k, v) for k, v in optimizer.get_config().items()])
+    params = {k: v for k, v in optimizer.get_config().items()}
     config = {
         'class_name': optimizer.__class__.__name__,
         'config': params,
@@ -70,22 +71,16 @@ def huber_loss(y_true, y_pred, clip_value):
     condition = K.abs(x) < clip_value
     squared_loss = .5 * K.square(x)
     linear_loss = clip_value * (K.abs(x) - .5 * clip_value)
-    if K.backend() == 'tensorflow':
-        import tensorflow as tf
-        if hasattr(tf, 'select'):
-            return tf.select(condition, squared_loss, linear_loss)  # condition, true, false
-        else:
-            return tf.where(condition, squared_loss, linear_loss)  # condition, true, false
-    elif K.backend() == 'theano':
-        from theano import tensor as T
-        return T.switch(condition, squared_loss, linear_loss)
+    import tensorflow as tf
+    if hasattr(tf, 'select'):
+        return tf.select(condition, squared_loss, linear_loss)  # condition, true, false
     else:
-        raise RuntimeError('Unknown backend "{}".'.format(K.backend()))
+        return tf.where(condition, squared_loss, linear_loss)  # condition, true, false
 
 
 class AdditionalUpdatesOptimizer(optimizers.Optimizer):
     def __init__(self, optimizer, additional_updates):
-        super(AdditionalUpdatesOptimizer, self).__init__()
+        super().__init__(optimizer._name)
         self.optimizer = optimizer
         self.additional_updates = additional_updates
 
@@ -100,7 +95,7 @@ class AdditionalUpdatesOptimizer(optimizers.Optimizer):
 
 
 # Based on https://github.com/openai/baselines/blob/master/baselines/common/mpi_running_mean_std.py
-class WhiteningNormalizer(object):
+class WhiteningNormalizer:
     def __init__(self, shape, eps=1e-2, dtype=np.float64):
         self.eps = eps
         self.shape = shape

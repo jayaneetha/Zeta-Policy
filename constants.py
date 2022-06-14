@@ -4,16 +4,20 @@ host = socket.gethostname()
 
 # environment specific constants
 
-PKL_ROOT = './pkl/'
+DATA_ROOT = '/data'
+RESULTS_ROOT = '/results'
 
 if host == 'asimov':
-    PKL_ROOT = '/home/u1116888/projects/iemocap_dataset/'
+    DATA_ROOT = '/home/u1116888/projects/iemocap_dataset/h5_data'
+    RESULTS_ROOT = '/home/u1116888/projects/Zeta-Policy/rl-files'
 
 if host == 'Thejans-MacBook-Pro.local':
-    PKL_ROOT = '/Users/jayaneetha/Research/PycharmProjects/iemocap_dataset/pkl/'
+    DATA_ROOT = '/Users/jayaneetha/Research/PycharmProjects/iemocap_dataset/pkl'
+    RESULTS_ROOT = '/Users/jayaneetha/Research/PycharmProjects/Zeta-Policy/rl-files'
 
 if host == 'Thejans-MacBook-Pro-13.local':
-    PKL_ROOT = '/Users/jayaneetha/PycharmProjects/iemocap_dataset/pkl/'
+    DATA_ROOT = '/Users/jayaneetha/PycharmProjects/iemocap_dataset/pkl'
+    RESULTS_ROOT = '/Users/jayaneetha/PycharmProjects/Zeta-Policy/rl-files'
 
 EMOTIONS = ['hap', 'sad', 'ang', 'neu']
 GENDERS = ['M', 'F']

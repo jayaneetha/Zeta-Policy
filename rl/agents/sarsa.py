@@ -1,9 +1,9 @@
 import collections
 
-import keras.backend as K
 import numpy as np
-from keras.layers import Input, Lambda
-from keras.models import Model
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Input, Lambda
+from tensorflow.keras.models import Model
 
 from rl.agents.dqn import mean_q
 from rl.core import Agent
@@ -15,7 +15,6 @@ from rl.util import huber_loss
 class SARSAAgent(Agent):
     """Write me
     """
-
     def __init__(self, model, nb_actions, policy=None, test_policy=None, gamma=.99, nb_steps_warmup=10,
                  train_interval=1, delta_clip=np.inf, *args, **kwargs):
         super(SarsaAgent, self).__init__(*args, **kwargs)
@@ -228,7 +227,6 @@ class SARSAAgent(Agent):
     def test_policy(self, policy):
         self.__test_policy = policy
         self.__test_policy._set_agent(self)
-
 
 # Aliases
 SarsaAgent = SARSAAgent

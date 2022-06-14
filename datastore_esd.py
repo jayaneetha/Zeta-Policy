@@ -1,28 +1,52 @@
-from constants import PKL_ROOT
+from constants import DATA_ROOT
 from datastore import Datastore
 from feature_type import FeatureType
 from framework import read_hdf5
 
 
 class ESDDatastore(Datastore):
-    def __init__(self, feature_type: FeatureType):
+    def __init__(self, feature_type: FeatureType, custom_split: float = None):
         if not (FeatureType.MFCC == feature_type):
             raise Exception("Only supports {}".format(FeatureType.MFCC.name))
 
-        self.train_mfcc = read_hdf5(f"{PKL_ROOT}h5_data/train_vltp_noised_balanced_esd.h5", "mfcc")
-        self.train_emotion = read_hdf5(f"{PKL_ROOT}h5_data/train_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+        base_h5_file = "vltp_noised_balanced_esd.h5"
+
+        # self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_vltp_noised_balanced_esd.h5", "mfcc")
+        # self.train_emotion = read_hdf5(f"{DATA_ROOT}/train_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+        # self.target_mfcc = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "mfcc")
+        # self.target_emotion = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "emotion")
+
+        if custom_split is None:
+            self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "mfcc")
+            self.train_emotion = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "emotion_one_hot")
+            self.target_mfcc = read_hdf5(f"{DATA_ROOT}/test_{base_h5_file}", "mfcc")
+            self.target_emotion = read_hdf5(f"{DATA_ROOT}/test_{base_h5_file}", "emotion_one_hot")
+        else:
+            assert 0 < custom_split < 1
+            mfcc = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "mfcc")
+            emotion_one_hot = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "emotion_one_hot")
+            # emotion = read_hdf5(f"{DATA_ROOT}/{base_h5_file}", "emotion")
+
+            training_count = int((len(mfcc) * custom_split))
+            self.train_mfcc = mfcc[:training_count]
+            self.train_emotion = emotion_one_hot[:training_count]
+            self.target_mfcc = mfcc[training_count:]
+            self.target_emotion = emotion_one_hot[training_count:]
+
+        assert len(self.train_mfcc) == len(self.train_emotion)
+        assert len(self.target_mfcc) == len(self.target_emotion)
 
     def get_data(self):
         return (self.train_mfcc, self.train_emotion, None), (None, None, None)
 
-    def get_pre_train_data(self):
-        mfcc = read_hdf5(f"{PKL_ROOT}h5_data/valid_vltp_noised_balanced_esd.h5", "mfcc")
-        emotion = read_hdf5(f"{PKL_ROOT}h5_data/valid_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+    # def get_pre_train_data(self):
+    #     mfcc = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "mfcc")
+    #     emotion = read_hdf5(f"{DATA_ROOT}/valid_vltp_noised_balanced_esd.h5", "emotion_one_hot")
+    #
+    #     return mfcc, emotion, None
 
-        return mfcc, emotion, None
+    def get_testing_data(self):
+        # mfcc = read_hdf5(f"{DATA_ROOT}/test_vltp_noised_balanced_esd.h5", "mfcc")
+        # emotion = read_hdf5(f"{DATA_ROOT}/test_vltp_noised_balanced_esd.h5", "emotion")
 
-    def get_eval_data(self):
-        mfcc = read_hdf5(f"{PKL_ROOT}h5_data/test_vltp_noised_balanced_esd.h5", "mfcc")
-        emotion = read_hdf5(f"{PKL_ROOT}h5_data/test_vltp_noised_balanced_esd.h5", "emotion_one_hot")
-
-        return mfcc, emotion, None
+        return self.target_mfcc, self.target_emotion, None
