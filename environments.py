@@ -4,7 +4,9 @@ import numpy as np
 from constants import EMOTIONS, NUM_MFCC, NO_features
 from datastore import CombinedDatastore
 from datastore_emodb import EmoDBDatastore
+from datastore_emodb_kitchen import KitchenEmoDBDatastore
 from datastore_esd import ESDDatastore
+from datastore_esd_kitchen import KitchenESDDatastore
 from datastore_iemocap import IemocapDatastore
 from datastore_improv import ImprovDatastore
 from datastore_savee import SaveeDatastore
@@ -102,12 +104,30 @@ class ESDEnv(AbstractEnv):
         super().__init__(data_version=data_version, datastore=datastore)
 
 
+class KitchenESDEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version, datastore: KitchenESDDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = KitchenESDDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
+
+
 class EmoDBEnv(AbstractEnv):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, data_version, datastore: EmoDBDatastore = None, custom_split: float = None) -> None:
         if datastore is None:
             datastore = EmoDBDatastore(FeatureType.MFCC, custom_split)
+        super().__init__(data_version=data_version, datastore=datastore)
+
+
+class KitchenEmoDBEnv(AbstractEnv):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, data_version, datastore: KitchenEmoDBDatastore = None, custom_split: float = None) -> None:
+        if datastore is None:
+            datastore = KitchenEmoDBDatastore(FeatureType.MFCC, custom_split)
         super().__init__(data_version=data_version, datastore=datastore)
 
 
