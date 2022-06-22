@@ -65,10 +65,14 @@ def str2dataset(v) -> DataVersions:
         return DataVersions.KITCHEN_ESD
     if ds == 'kitchen_esd_db0':
         return DataVersions.KITCHEN_ESD_DB0
-    if ds == 'kitchen_esd_db5':
-        return DataVersions.KITCHEN_ESD_DB5
-    if ds == 'kitchen_esd_db10':
-        return DataVersions.KITCHEN_ESD_DB10
+    if ds == 'kitchen_esd_db-5':
+        return DataVersions.KITCHEN_ESD_DBn5
+    if ds == 'kitchen_esd_db-10':
+        return DataVersions.KITCHEN_ESD_DBn10
+    if ds == 'kitchen_esd_db+5':
+        return DataVersions.KITCHEN_ESD_DBp5
+    if ds == 'kitchen_esd_db+10':
+        return DataVersions.KITCHEN_ESD_DBp10
 
 
 def get_datastore(data_version: DataVersions, feature_type: FeatureType = FeatureType.MFCC,
@@ -101,11 +105,19 @@ def get_datastore(data_version: DataVersions, feature_type: FeatureType = Featur
         from datastore_esd_kitchen import KitchenESDDatastore
         return KitchenESDDatastore(feature_type, custom_split, background_noise_db=0)
 
-    if data_version == DataVersions.KITCHEN_ESD_DB5:
+    if data_version == DataVersions.KITCHEN_ESD_DBn5:
+        from datastore_esd_kitchen import KitchenESDDatastore
+        return KitchenESDDatastore(feature_type, custom_split, background_noise_db=-5)
+
+    if data_version == DataVersions.KITCHEN_ESD_DBn10:
+        from datastore_esd_kitchen import KitchenESDDatastore
+        return KitchenESDDatastore(feature_type, custom_split, background_noise_db=-10)
+
+    if data_version == DataVersions.KITCHEN_ESD_DBp5:
         from datastore_esd_kitchen import KitchenESDDatastore
         return KitchenESDDatastore(feature_type, custom_split, background_noise_db=5)
 
-    if data_version == DataVersions.KITCHEN_ESD_DB10:
+    if data_version == DataVersions.KITCHEN_ESD_DBp10:
         from datastore_esd_kitchen import KitchenESDDatastore
         return KitchenESDDatastore(feature_type, custom_split, background_noise_db=10)
 
@@ -133,8 +145,8 @@ def get_environment(data_version: DataVersions, datastore: Datastore, custom_spl
         from environments import EmoDBEnv
         return EmoDBEnv(data_version, datastore=datastore, custom_split=custom_split)
 
-    if data_version == DataVersions.KITCHEN_ESD or data_version == DataVersions.KITCHEN_ESD_DB0 or \
-            data_version == DataVersions.KITCHEN_ESD_DB5 or data_version == DataVersions.KITCHEN_ESD_DB10:
+    if data_version in [DataVersions.KITCHEN_ESD, DataVersions.KITCHEN_ESD_DB0, DataVersions.KITCHEN_ESD_DBn5,
+                        DataVersions.KITCHEN_ESD_DBn10, DataVersions.KITCHEN_ESD_DBp5, DataVersions.KITCHEN_ESD_DBp10]:
         from environments import KitchenESDEnv
         return KitchenESDEnv(data_version, datastore=datastore, custom_split=custom_split)
 

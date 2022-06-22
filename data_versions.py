@@ -11,5 +11,7 @@ class DataVersions(Enum):
     KITCHEN_EMODB = 7,  # EmoDB Dataset with Kitchen background sound
     KITCHEN_ESD = 8,  # ESD Dataset with Kitchen background sound
     KITCHEN_ESD_DB0 = 9,  # ESD Dataset with Kitchen background sound SNR db 0
-    KITCHEN_ESD_DB5 = 10,  # ESD Dataset with Kitchen background sound SNR db 0
-    KITCHEN_ESD_DB10 = 11,  # ESD Dataset with Kitchen background sound SNR db 0
+    KITCHEN_ESD_DBn5 = 10,  # ESD Dataset with Kitchen background sound SNR db -5
+    KITCHEN_ESD_DBn10 = 11,  # ESD Dataset with Kitchen background sound SNR db -10
+    KITCHEN_ESD_DBp5 = 12,  # ESD Dataset with Kitchen background sound SNR db +5
+    KITCHEN_ESD_DBp10 = 13,  # ESD Dataset with Kitchen background sound SNR db +10
