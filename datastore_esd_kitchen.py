@@ -5,11 +5,13 @@ from framework import read_hdf5
 
 
 class KitchenESDDatastore(Datastore):
-    def __init__(self, feature_type: FeatureType, custom_split: float = None):
+    def __init__(self, feature_type: FeatureType, custom_split: float = None, background_noise_db=None):
         if not (FeatureType.MFCC == feature_type):
             raise Exception("Only supports {}".format(FeatureType.MFCC.name))
-
-        base_h5_file = "kitchen_bg_vltp_noised_balanced_esd.h5"
+        if background_noise_db is None:
+            base_h5_file = "kitchen_bg_vltp_noised_balanced_esd.h5"
+        else:
+            base_h5_file = f"kitchen_bg_db{background_noise_db}_vltp_noised_balanced_esd.h5"
 
         if custom_split is None:
             self.train_mfcc = read_hdf5(f"{DATA_ROOT}/train_{base_h5_file}", "mfcc")

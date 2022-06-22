@@ -25,7 +25,9 @@ def run():
     parser.add_argument('--policy', type=str, default='EpsGreedyQPolicy')
     parser.add_argument('--data-version', nargs='+',
                         choices=[DataVersions.IEMOCAP, DataVersions.SAVEE, DataVersions.IMPROV, DataVersions.ESD,
-                                 DataVersions.EMODB, DataVersions.KITCHEN_EMODB, DataVersions.KITCHEN_ESD],
+                                 DataVersions.EMODB, DataVersions.KITCHEN_EMODB, DataVersions.KITCHEN_ESD,
+                                 DataVersions.KITCHEN_ESD_DB0, DataVersions.KITCHEN_ESD_DB5,
+                                 DataVersions.KITCHEN_ESD_DB10],
                         type=str2dataset, default=DataVersions.IEMOCAP)
     parser.add_argument('--data-split', nargs='+', type=float, default=None)
     parser.add_argument('--zeta-nb-steps', type=int, default=100000)
@@ -43,7 +45,8 @@ def run():
     parser.add_argument('--testing-dataset', type=str2dataset, default=None,
                         choices=[DataVersions.IEMOCAP, DataVersions.IMPROV, DataVersions.SAVEE, DataVersions.ESD,
                                  DataVersions.COMBINED, DataVersions.EMODB, DataVersions.KITCHEN_EMODB,
-                                 DataVersions.KITCHEN_ESD])
+                                 DataVersions.KITCHEN_ESD, DataVersions.KITCHEN_ESD_DB0, DataVersions.KITCHEN_ESD_DB5,
+                                 DataVersions.KITCHEN_ESD_DB10])
     parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--wandb-disable', type=str2bool, default=False, choices=[True, False])
     parser.add_argument('--wandb-mode', type=str, default='online', choices=['online', 'offline'])

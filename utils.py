@@ -63,6 +63,12 @@ def str2dataset(v) -> DataVersions:
         return DataVersions.KITCHEN_EMODB
     if ds == 'kitchen_esd':
         return DataVersions.KITCHEN_ESD
+    if ds == 'kitchen_esd_db0':
+        return DataVersions.KITCHEN_ESD_DB0
+    if ds == 'kitchen_esd_db5':
+        return DataVersions.KITCHEN_ESD_DB5
+    if ds == 'kitchen_esd_db10':
+        return DataVersions.KITCHEN_ESD_DB10
 
 
 def get_datastore(data_version: DataVersions, feature_type: FeatureType = FeatureType.MFCC,
@@ -91,6 +97,18 @@ def get_datastore(data_version: DataVersions, feature_type: FeatureType = Featur
         from datastore_emodb_kitchen import KitchenEmoDBDatastore
         return KitchenEmoDBDatastore(feature_type, custom_split)
 
+    if data_version == DataVersions.KITCHEN_ESD_DB0:
+        from datastore_esd_kitchen import KitchenESDDatastore
+        return KitchenESDDatastore(feature_type, custom_split, background_noise_db=0)
+
+    if data_version == DataVersions.KITCHEN_ESD_DB5:
+        from datastore_esd_kitchen import KitchenESDDatastore
+        return KitchenESDDatastore(feature_type, custom_split, background_noise_db=5)
+
+    if data_version == DataVersions.KITCHEN_ESD_DB10:
+        from datastore_esd_kitchen import KitchenESDDatastore
+        return KitchenESDDatastore(feature_type, custom_split, background_noise_db=10)
+
     raise NotImplementedError(data_version)
 
 
@@ -115,7 +133,8 @@ def get_environment(data_version: DataVersions, datastore: Datastore, custom_spl
         from environments import EmoDBEnv
         return EmoDBEnv(data_version, datastore=datastore, custom_split=custom_split)
 
-    if data_version == DataVersions.KITCHEN_ESD:
+    if data_version == DataVersions.KITCHEN_ESD or data_version == DataVersions.KITCHEN_ESD_DB0 or \
+            data_version == DataVersions.KITCHEN_ESD_DB5 or data_version == DataVersions.KITCHEN_ESD_DB10:
         from environments import KitchenESDEnv
         return KitchenESDEnv(data_version, datastore=datastore, custom_split=custom_split)
 
