@@ -8,7 +8,8 @@ DATA_ROOT = '/data'
 RESULTS_ROOT = '/results'
 
 if host == 'asimov':
-    DATA_ROOT = '/home/u1116888/projects/iemocap_dataset/h5_data'
+    # DATA_ROOT = '/home/u1116888/projects/iemocap_dataset/h5_data'
+    DATA_ROOT = '/home/u1116888/docker/ZetaPolicy/data'
     RESULTS_ROOT = '/home/u1116888/projects/Zeta-Policy/rl-files'
 
 if host == 'Thejans-MacBook-Pro.local':
