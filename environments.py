@@ -40,7 +40,7 @@ class AbstractEnv(gym.Env):
 
         done = (len(self.X) - 2 <= self.itr)
 
-        next_state = self.X[self.itr + 1]
+        next_state = self.get_next_state()
 
         info = {
             "ground_truth": np.argmax(self.Y[self.itr]),
@@ -50,6 +50,19 @@ class AbstractEnv(gym.Env):
         self.itr += 1
 
         return next_state, reward, done, info
+
+    def get_next_state(self):
+        # TODO: Fix after try-out
+        #  Trying to remove outlier happy utterances
+        if EMOTIONS[np.argmax(self.Y[self.itr + 1])] == 'hap':
+            if (-495.6675 < np.mean(self.X[self.itr + 1], axis=1)[0]) or (
+                    np.mean(self.X[self.itr + 1], axis=1)[0] < -262.93038):
+                return self.X[self.itr + 1]
+            else:
+                self.itr += 1
+                return self.get_next_state()
+        else:
+            return self.X[self.itr + 1]
 
     def render(self, mode='human'):
         print("Not implemented \t i: {}".format(self.itr))

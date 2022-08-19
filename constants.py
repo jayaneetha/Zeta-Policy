@@ -20,6 +20,12 @@ if host == 'Thejans-MacBook-Pro-13.local':
     DATA_ROOT = '/Users/jayaneetha/PycharmProjects/iemocap_dataset/pkl'
     RESULTS_ROOT = '/Users/jayaneetha/PycharmProjects/Zeta-Policy/rl-files'
 
+if host == 'Thejans-Servian-MacBook-Pro.local':
+    # DATA_ROOT = '/Volumes/Research/PycharmProjects/iemocap_dataset/pkl'
+    # DATA_ROOT = '/Volumes/New Volume/pkl'
+    DATA_ROOT = '/Users/thejanrajapakshe/Research/PycharmProjects/TAC_RL_DA_analysis/data'
+    RESULTS_ROOT = '/Users/thejanrajapakshe/Research/PycharmProjects/Zeta-Policy/rl-files'
+
 EMOTIONS = ['hap', 'sad', 'ang', 'neu']
 GENDERS = ['M', 'F']
 NUM_MFCC = 40
