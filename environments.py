@@ -40,7 +40,7 @@ class AbstractEnv(gym.Env):
 
         done = (len(self.X) - 2 <= self.itr)
 
-        next_state = self.get_next_state()
+        next_state = self.X[self.itr + 1]
 
         info = {
             "ground_truth": np.argmax(self.Y[self.itr]),

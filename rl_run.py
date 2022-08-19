@@ -1,11 +1,12 @@
 import argparse
+import os
 from datetime import datetime
 
-import os
 import tensorflow as tf
 from tensorflow.keras import Input
 
 import models
+from SaveBestModelCallback import SaveBestModelCallback
 from constants import NUM_MFCC, NO_features, WINDOW_LENGTH, RESULTS_ROOT
 from data_versions import DataVersions
 from datastore import Datastore
@@ -175,6 +176,9 @@ def run():
         log_filename = log_dir + '/dqn_{}_log.json'.format(args.env_name)
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=10)]
+
+        best_model_filename = models_dir + '/best_model_dqn_' + args.env_name + '_weights_{episode}.h5'
+        callbacks += [SaveBestModelCallback(model_save_name=best_model_filename)]
 
         if not args.wandb_disable:
             wandb_project_name = 'zeta-policy'

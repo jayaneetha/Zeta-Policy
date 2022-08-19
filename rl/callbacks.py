@@ -1,12 +1,16 @@
 import json
 import timeit
+import warnings
 
 import numpy as np
+import pandas as pd
 import wandb
-import warnings
+from sklearn.metrics import recall_score
 from tensorflow.keras import __version__ as KERAS_VERSION
 from tensorflow.python.keras.callbacks import Callback as KerasCallback, CallbackList as KerasCallbackList
 from tensorflow.python.keras.utils.generic_utils import Progbar
+
+from constants import EMOTIONS
 
 
 class Callback(KerasCallback):
@@ -100,6 +104,7 @@ class CallbackList(KerasCallbackList):
 
 class TestLogger(Callback):
     """ Logger Class for Test """
+
     def on_train_begin(self, logs):
         """ Print logs at beginning of training"""
         print(f"Testing for {self.params['nb_episodes']} episodes ...")
@@ -289,6 +294,8 @@ class FileLogger(Callback):
         self.starts = {}
         self.data = {}
         self.correct_inference = {}
+        self.UARs = {}
+        self.step_inferences = []
 
     def on_train_begin(self, logs):
         """ Initialize model metrics before training """
@@ -305,6 +312,7 @@ class FileLogger(Callback):
         self.metrics[episode] = []
         self.starts[episode] = timeit.default_timer()
         self.correct_inference[episode] = []
+        self.step_inferences = []
 
     def on_episode_end(self, episode, logs):
         """ Compute and print metrics at the end of each episode """
@@ -321,6 +329,11 @@ class FileLogger(Callback):
         data += list(logs.items())
         data += [('episode', episode), ('duration', duration)]
         data += [('correct_inference', np.sum(self.correct_inference[episode]))]
+
+        df = pd.DataFrame(self.step_inferences)
+        UAR = recall_score(df['ground_truth'].to_numpy(), df['inference'].to_numpy(), average='macro')
+        data += [('UAR', UAR)]
+
         for key, value in data:
             if key not in self.data:
                 self.data[key] = []
@@ -342,6 +355,11 @@ class FileLogger(Callback):
             self.correct_inference[logs['episode']].append(int(logs['info']['correct_inference']))
         except KeyError:
             pass
+
+        self.step_inferences.append({
+            'ground_truth': EMOTIONS[int(logs['info']['ground_truth'])],
+            'inference': EMOTIONS[int(logs['action'])]
+        })
 
     def save_data(self):
         """ Save metrics in a json file """
