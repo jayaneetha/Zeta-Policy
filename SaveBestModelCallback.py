@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from sklearn.metrics import recall_score
 
@@ -7,10 +9,11 @@ from rl.callbacks import Callback
 
 class SaveBestModelCallback(Callback):
 
-    def __init__(self, model_save_name: str):
+    def __init__(self, model_save_name: str, model_dir: str, ):
         self.step_inferences = []
         self.best_uar = 0
         self.model_save_name = model_save_name
+        self.model_dir = model_dir
 
     def on_episode_begin(self, episode, logs):
         self.step_inferences = []
@@ -22,7 +25,9 @@ class SaveBestModelCallback(Callback):
 
         if UAR > self.best_uar:
             self.best_uar = UAR
-            self.model.model.save(self.model_save_name.replace("{episode}", str(episode)))
+            save_dir = f'{self.model_dir}/{str(episode)}'
+            os.makedirs(save_dir)
+            self.model.model.save(save_dir + "/" + self.model_save_name)
 
         del df
 

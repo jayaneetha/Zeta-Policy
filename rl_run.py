@@ -177,8 +177,8 @@ def run():
         callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
         callbacks += [FileLogger(log_filename, interval=10)]
 
-        best_model_filename = models_dir + '/best_model_dqn_' + args.env_name + '_weights_{episode}.h5'
-        callbacks += [SaveBestModelCallback(model_save_name=best_model_filename)]
+        best_model_filename = 'best_model_dqn_' + args.env_name + '_weights.h5f'
+        callbacks += [SaveBestModelCallback(model_dir=models_dir, model_save_name=best_model_filename)]
 
         if not args.wandb_disable:
             wandb_project_name = 'zeta-policy'
