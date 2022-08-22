@@ -1,12 +1,12 @@
 import datetime
 import logging
+import os
 import pickle
 import sys
 from os import path
 
 import h5py
 import numpy as np
-import os
 import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
