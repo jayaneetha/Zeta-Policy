@@ -62,3 +62,5 @@ watchdog==0.10.4
 Werkzeug==1.0.1
 wrapt==1.12.1
 zipp==3.4.0
+nlpaug==1.1.11
+tqdm
